@@ -1,0 +1,26 @@
+const express = require('express');
+const router = express.Router();
+const authController = require('../controllers/authController');
+const { protect } = require('../middleware/authMiddleware');
+
+// Public routes
+router.post('/register', authController.register);
+router.post('/login', authController.login);
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/reset-password', authController.resetPassword);
+
+// Protected routes (require authentication)
+router.get('/me', protect, authController.getMe);
+router.put('/profile', protect, authController.updateProfile);
+router.post('/logout', protect, authController.logout);
+
+// Test route
+router.get('/test', (req, res) => {
+  res.json({ success: true, message: 'Auth routes working!' });
+});
+
+// Add these routes
+router.post('/change-password', protect, authController.changePassword);
+router.get('/my-businesses', protect, authController.getMyBusinesses);
+router.post('/upload-profile-picture', protect, authController.uploadProfilePicture);
+module.exports = router;
