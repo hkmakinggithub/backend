@@ -9,7 +9,38 @@ const generateToken = (userId) => {
     { expiresIn: process.env.JWT_EXPIRE }
   );
 };
-
+// Google/Facebook login
+const socialLogin = async (req, res) => {
+  try {
+    const { provider, email, name, providerId, profileImage } = req.body;
+    
+    // Check if user exists
+    let user = await User.findByEmail(email);
+    
+    if (!user) {
+      // Create new user
+      user = await User.createSocialUser({
+        name,
+        email,
+        provider,
+        providerId,
+        profile_image: profileImage,
+        phone: null // Will be added later
+      });
+    }
+    
+    const token = generateToken(user.id);
+    
+    res.json({
+      success: true,
+      message: 'Login successful',
+      data: { user, token }
+    });
+  } catch (error) {
+    console.error('Social login error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 // @desc    Register new user
 const register = async (req, res) => {
   try {

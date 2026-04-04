@@ -448,6 +448,129 @@ const updateBusinessLocation = async (req, res) => {
     });
   }
 };
+
+// Track business view
+const trackBusinessView = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    
+    // Update analytics
+    const sql = `
+      INSERT INTO business_analytics (business_id, views, last_updated)
+      VALUES ($1, 1, CURRENT_TIMESTAMP)
+      ON CONFLICT (business_id) 
+      DO UPDATE SET views = business_analytics.views + 1, last_updated = CURRENT_TIMESTAMP
+    `;
+    await query(sql, [businessId]);
+    
+    // Update daily stats
+    const dailySql = `
+      INSERT INTO business_daily_stats (business_id, date, views)
+      VALUES ($1, CURRENT_DATE, 1)
+      ON CONFLICT (business_id, date) 
+      DO UPDATE SET views = business_daily_stats.views + 1
+    `;
+    await query(dailySql, [businessId]);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Track view error:', error);
+    res.status(500).json({ success: false });
+  }
+};
+
+// Track business click (call, direction, share, whatsapp)
+const trackBusinessClick = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    const { type } = req.body; // 'call', 'direction', 'share', 'whatsapp'
+    
+    let column = '';
+    switch(type) {
+      case 'call': column = 'call_clicks'; break;
+      case 'direction': column = 'direction_clicks'; break;
+      case 'share': column = 'shares'; break;
+      case 'whatsapp': column = 'whatsapp_clicks'; break;
+      default: column = 'clicks';
+    }
+    
+    const sql = `
+      INSERT INTO business_analytics (business_id, ${column}, last_updated)
+      VALUES ($1, 1, CURRENT_TIMESTAMP)
+      ON CONFLICT (business_id) 
+      DO UPDATE SET ${column} = business_analytics.${column} + 1, last_updated = CURRENT_TIMESTAMP
+    `;
+    await query(sql, [businessId]);
+    
+    // Update daily stats
+    const dailySql = `
+      INSERT INTO business_daily_stats (business_id, date, clicks)
+      VALUES ($1, CURRENT_DATE, 1)
+      ON CONFLICT (business_id, date) 
+      DO UPDATE SET clicks = business_daily_stats.clicks + 1
+    `;
+    await query(dailySql, [businessId]);
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Track click error:', error);
+    res.status(500).json({ success: false });
+  }
+};
+
+// Get business analytics (Admin only)
+const getBusinessAnalytics = async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    
+    const sql = `
+      SELECT * FROM business_analytics WHERE business_id = $1
+    `;
+    const result = await query(sql, [businessId]);
+    
+    // Get last 7 days stats
+    const dailySql = `
+      SELECT date, views, clicks
+      FROM business_daily_stats
+      WHERE business_id = $1 AND date >= CURRENT_DATE - INTERVAL '7 days'
+      ORDER BY date DESC
+    `;
+    const dailyResult = await query(dailySql, [businessId]);
+    
+    res.json({
+      success: true,
+      data: result.rows[0] || { views: 0, clicks: 0, shares: 0 },
+      daily: dailyResult.rows
+    });
+  } catch (error) {
+    console.error('Get analytics error:', error);
+    res.status(500).json({ success: false });
+  }
+};
+
+// Get popular businesses (Top 10)
+const getPopularBusinesses = async (req, res) => {
+  try {
+    const sql = `
+      SELECT b.*, a.views, a.clicks, a.shares
+      FROM businesses b
+      JOIN business_analytics a ON b.id = a.business_id
+      WHERE b.status = 'approved'
+      ORDER BY a.views DESC
+      LIMIT 10
+    `;
+    const result = await query(sql);
+    
+    res.json({
+      success: true,
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('Get popular businesses error:', error);
+    res.status(500).json({ success: false });
+  }
+};
+
 module.exports = {
   getBusinessesByCategory,
   getAllBusinesses,
@@ -459,6 +582,10 @@ module.exports = {
   getPendingBusinesses,
   approveBusiness,
   rejectBusiness,
-  getNearbyBusinesses,        // Add this
-  updateBusinessLocation      // Add this
+  getNearbyBusinesses,
+  updateBusinessLocation,
+  trackBusinessView,        // Add this
+  trackBusinessClick,       // Add this
+  getBusinessAnalytics,     // Add this
+  getPopularBusinesses      // Add this
 };

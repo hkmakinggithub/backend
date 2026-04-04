@@ -32,5 +32,9 @@ router.get('/', businessController.getAllBusinesses);
 
 // Get single business (MUST BE LAST)
 router.get('/:id', businessController.getBusiness);
-
+// Analytics routes
+router.post('/:businessId/track-view', businessController.trackBusinessView);
+router.post('/:businessId/track-click', businessController.trackBusinessClick);
+router.get('/:businessId/analytics', protect, businessController.getBusinessAnalytics);
+router.get('/analytics/popular', businessController.getPopularBusinesses);
 module.exports = router;

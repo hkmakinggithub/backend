@@ -13,7 +13,10 @@ const favoriteRoutes = require('./routes/favoriteRoutes');
 const reviewRoutes = require('./routes/reviewRoutes'); // Make sure this exists
 
 const app = express();
+const notificationRoutes = require('./routes/notificationRoutes');
 
+// Add with other routes
+app.use('/api/notifications', notificationRoutes);
 // Middleware
 app.use(cors({
   origin: '*',

@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "a81a612b-57a8-4155-824a-b56373b70b8e"
+      }
+    },
+    "android": {
+      "package": "com.harshsompura_2405.marugaambackend"
+    }
+  }
+}
