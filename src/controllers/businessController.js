@@ -4,15 +4,64 @@
 const { query } = require('../config/database');
 const Business = require('../models/Business');
 // Get businesses by category
+// Get businesses by category (with city filter)
+// Get businesses by category (with optional city filter)
+
+
+
+
+
+
+// Get businesses by category (with optional city filter)
 const getBusinessesByCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
-    const sql = `
-      SELECT * FROM businesses 
-      WHERE category_id = $1 AND status = 'approved'
-      ORDER BY rating DESC
-    `;
-    const result = await query(sql, [categoryId]);
+    const { cityId } = req.query;
+    
+    console.log('Fetching businesses - Category:', categoryId, 'City:', cityId);
+    
+    // First, check if this category has sub-categories
+    const subCheck = await query(
+      'SELECT id FROM categories WHERE parent_id = $1 AND is_active = true',
+      [categoryId]
+    );
+    
+    let sql;
+    let params;
+    
+    // If category has sub-categories, get all businesses from sub-categories
+    if (subCheck.rows.length > 0) {
+      console.log('Category has sub-categories, fetching all from sub-categories');
+      sql = `
+        SELECT b.*, c.name as category_name
+        FROM businesses b
+        JOIN categories c ON b.category_id = c.id
+        WHERE c.parent_id = $1 AND b.status = 'approved'
+      `;
+      params = [categoryId];
+    } else {
+      // No sub-categories, get businesses directly from this category
+      sql = `
+        SELECT b.*, c.name as category_name
+        FROM businesses b
+        JOIN categories c ON b.category_id = c.id
+        WHERE b.category_id = $1 AND b.status = 'approved'
+      `;
+      params = [categoryId];
+    }
+    
+    // Add city filter if provided
+    if (cityId && cityId !== 'null' && cityId !== 'undefined') {
+      sql += ` AND b.city_id = $${params.length + 1}`;
+      params.push(cityId);
+      console.log('Filtering by city:', cityId);
+    }
+    
+    sql += ` ORDER BY b.rating DESC`;
+    
+    const result = await query(sql, params);
+    
+    console.log(`Found ${result.rows.length} businesses`);
     
     res.json({
       success: true,
@@ -27,6 +76,44 @@ const getBusinessesByCategory = async (req, res) => {
   }
 };
 
+const getBusinessesByMainCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const { cityId } = req.query;
+    
+    console.log('Fetching all businesses for main category:', categoryId);
+    
+    let sql = `
+      SELECT b.*, c.name as category_name
+      FROM businesses b
+      JOIN categories c ON b.category_id = c.id
+      WHERE (c.id = $1 OR c.parent_id = $1) AND b.status = 'approved'
+    `;
+    let params = [categoryId];
+    
+    if (cityId && cityId !== 'null' && cityId !== 'undefined') {
+      sql += ` AND b.city_id = $2`;
+      params.push(cityId);
+    }
+    
+    sql += ` ORDER BY b.rating DESC`;
+    
+    const result = await query(sql, params);
+    
+    console.log(`Found ${result.rows.length} businesses for main category`);
+    
+    res.json({
+      success: true,
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('Get businesses by main category error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch businesses'
+    });
+  }
+};
 // Get all businesses
 const getAllBusinesses = async (req, res) => {
   try {
@@ -587,5 +674,6 @@ module.exports = {
   trackBusinessView,        // Add this
   trackBusinessClick,       // Add this
   getBusinessAnalytics,     // Add this
-  getPopularBusinesses      // Add this
+  getPopularBusinesses,      // Add this
+  getBusinessesByMainCategory  // Add this line
 };

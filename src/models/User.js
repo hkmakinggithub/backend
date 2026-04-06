@@ -2,6 +2,20 @@ const { query } = require('../config/database');
 const bcrypt = require('bcryptjs');
 
 class User {
+
+  // Add these to your existing User class
+
+// Find user by email
+static async findByEmail(email) {
+  const sql = 'SELECT * FROM users WHERE email = $1';
+  const result = await query(sql, [email]);
+  return result.rows[0];
+}
+
+// Add these columns to your database
+// ALTER TABLE users ADD COLUMN google_id VARCHAR(100);
+// ALTER TABLE users ADD COLUMN facebook_id VARCHAR(100);
+// ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT false;
   // Create new user
   static async create(userData) {
     const { name, phone, city, pincode, password, profile_image } = userData;

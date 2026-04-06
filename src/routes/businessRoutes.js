@@ -24,9 +24,11 @@ router.put('/:id/location', protect, businessController.updateBusinessLocation);
 
 // Category route
 router.get('/category/:categoryId', businessController.getBusinessesByCategory);
-
+// Add this route BEFORE the generic /:id route
+router.get('/category/main/:categoryId', businessController.getBusinessesByMainCategory);
 // ============= GENERIC ROUTES LAST =============
-
+// Get all businesses from main category (includes all sub-categories)
+router.get('/category/main/:categoryId', businessController.getBusinessesByMainCategory);
 // Get all businesses
 router.get('/', businessController.getAllBusinesses);
 

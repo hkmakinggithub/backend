@@ -401,6 +401,172 @@ const uploadProfilePicture = async (req, res) => {
     });
   }
 };
+
+
+const { createAndSendOTP, verifyOTP } = require('../services/otpService');
+
+// Send OTP for login/registration
+const sendLoginOTP = async (req, res) => {
+  try {
+    const { phoneNumber } = req.body;
+    
+    if (!phoneNumber || phoneNumber.length < 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Valid phone number is required'
+      });
+    }
+    
+    const result = await createAndSendOTP(phoneNumber);
+    
+    res.json({
+      success: true,
+      message: 'OTP sent successfully',
+      // In development, send OTP for testing
+      otp: process.env.NODE_ENV === 'development' ? result.otp : undefined
+    });
+  } catch (error) {
+    console.error('Send OTP error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send OTP'
+    });
+  }
+};
+
+// Verify OTP and login/register
+const verifyOTPAndLogin = async (req, res) => {
+  try {
+    const { phoneNumber, otp, name, email } = req.body;
+    
+    // Verify OTP
+    const verification = verifyOTP(phoneNumber, otp);
+    if (!verification.success) {
+      return res.status(400).json(verification);
+    }
+    
+    // Check if user exists
+    let user = await User.findByPhone(phoneNumber);
+    
+    if (!user) {
+      // Register new user
+      user = await User.create({
+        name: name || `User_${phoneNumber.slice(-4)}`,
+        phone: phoneNumber,
+        email: email || null,
+        city: '',
+        pincode: '',
+        password: Math.random().toString(36).slice(-8), // Random password
+        isVerified: true
+      });
+    }
+    
+    // Generate token
+    const token = generateToken(user.id);
+    
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user;
+    
+    res.json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        user: userWithoutPassword,
+        token
+      }
+    });
+  } catch (error) {
+    console.error('OTP Login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Login failed'
+    });
+  }
+};
+
+// Google Login
+const googleLogin = async (req, res) => {
+  try {
+    const { googleId, email, name, picture } = req.body;
+    
+    // Check if user exists with this email
+    let user = await User.findByEmail(email);
+    
+    if (!user) {
+      // Create new user with Google data
+      user = await User.create({
+        name: name,
+        phone: '',
+        email: email,
+        city: '',
+        pincode: '',
+        password: Math.random().toString(36).slice(-8),
+        profile_image: picture,
+        google_id: googleId,
+        isVerified: true
+      });
+    }
+    
+    const token = generateToken(user.id);
+    const { password: _, ...userWithoutPassword } = user;
+    
+    res.json({
+      success: true,
+      message: 'Google login successful',
+      data: {
+        user: userWithoutPassword,
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Google login failed'
+    });
+  }
+};
+
+// Facebook Login
+const facebookLogin = async (req, res) => {
+  try {
+    const { facebookId, email, name, picture } = req.body;
+    
+    let user = await User.findByEmail(email);
+    
+    if (!user) {
+      user = await User.create({
+        name: name,
+        phone: '',
+        email: email,
+        city: '',
+        pincode: '',
+        password: Math.random().toString(36).slice(-8),
+        profile_image: picture,
+        facebook_id: facebookId,
+        isVerified: true
+      });
+    }
+    
+    const token = generateToken(user.id);
+    const { password: _, ...userWithoutPassword } = user;
+    
+    res.json({
+      success: true,
+      message: 'Facebook login successful',
+      data: {
+        user: userWithoutPassword,
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Facebook login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Facebook login failed'
+    });
+  }
+};
 module.exports = {
   register,
   login,
@@ -411,5 +577,9 @@ module.exports = {
   uploadProfilePicture,
   forgotPassword,
   resetPassword,
-  logout
+  logout,
+   sendLoginOTP,        // Add this
+  verifyOTPAndLogin,   // Add this
+  googleLogin,         // Add this
+  facebookLogin        // Add this
 };

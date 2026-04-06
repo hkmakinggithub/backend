@@ -10,13 +10,13 @@ const authRoutes = require('./routes/authRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const businessRoutes = require('./routes/businessRoutes');
 const favoriteRoutes = require('./routes/favoriteRoutes');
-const reviewRoutes = require('./routes/reviewRoutes'); // Make sure this exists
+const reviewRoutes = require('./routes/reviewRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const cityRoutes = require('./routes/cityRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
-const notificationRoutes = require('./routes/notificationRoutes');
 
-// Add with other routes
-app.use('/api/notifications', notificationRoutes);
 // Middleware
 app.use(cors({
   origin: '*',
@@ -29,12 +29,15 @@ app.use(helmet());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Routes - ORDER MATTERS! Put specific routes before generic ones
+// Routes - ORDER MATTERS
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/businesses', businessRoutes);
 app.use('/api/favorites', favoriteRoutes);
-app.use('/api/reviews', reviewRoutes); // This must be here
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/cities', cityRoutes);
+app.use('/api/admin', adminRoutes); // Make sure this line exists
 
 // Health check
 app.get('/health', (req, res) => {
@@ -51,12 +54,15 @@ app.get('/', (req, res) => {
       categories: '/api/categories',
       businesses: '/api/businesses',
       favorites: '/api/favorites',
-      reviews: '/api/reviews'
+      reviews: '/api/reviews',
+      notifications: '/api/notifications',
+      cities: '/api/cities',
+      admin: '/api/admin'
     }
   });
 });
 
-// 404 handler
+// 404 handler - This should be LAST
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -73,4 +79,6 @@ app.use((err, req, res, next) => {
   });
 });
 
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 module.exports = app;

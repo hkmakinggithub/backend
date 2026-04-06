@@ -18,7 +18,13 @@ router.post('/logout', protect, authController.logout);
 router.get('/test', (req, res) => {
   res.json({ success: true, message: 'Auth routes working!' });
 });
+// OTP Routes
+router.post('/send-otp', authController.sendLoginOTP);
+router.post('/verify-otp', authController.verifyOTPAndLogin);
 
+// Social Login Routes
+router.post('/google-login', authController.googleLogin);
+router.post('/facebook-login', authController.facebookLogin);
 // Add these routes
 router.post('/change-password', protect, authController.changePassword);
 router.get('/my-businesses', protect, authController.getMyBusinesses);
