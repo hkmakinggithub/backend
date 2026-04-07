@@ -276,9 +276,10 @@ router.put('/reject/:id', async (req, res) => {
 // ============================================
 // CITIES
 // ============================================
+// Get all cities
 router.get('/cities', async (req, res) => {
   try {
-    const result = await query('SELECT * FROM cities ORDER BY name');
+    const result = await query('SELECT id, name FROM cities WHERE is_active = true ORDER BY name');
     res.json(result.rows);
   } catch (error) {
     console.error('Cities error:', error);
@@ -620,26 +621,193 @@ router.get('/businesses', async (req, res) => {
 
 
 // Dashboard by city
+// Dashboard by city
+// Dashboard by city
 router.get('/dashboard/:cityId', async (req, res) => {
   try {
     const { cityId } = req.params;
     
-    const result = await query(`
-      SELECT 
-        (SELECT COUNT(*) FROM users) as total_users,
-        (SELECT COUNT(*) FROM businesses WHERE city_id = $1 AND status = 'approved') as total_businesses,
-        (SELECT COUNT(*) FROM businesses WHERE city_id = $1 AND status = 'pending') as pending_businesses,
-        (SELECT COUNT(*) FROM businesses WHERE city_id = $1 AND status = 'rejected') as rejected_businesses,
-        (SELECT COUNT(*) FROM categories WHERE level = 1) as total_categories,
-        (SELECT COUNT(*) FROM categories WHERE level = 2) as total_subcategories,
-        (SELECT COUNT(*) FROM reviews r JOIN businesses b ON r.business_id = b.id WHERE b.city_id = $1) as total_reviews,
-        (SELECT COALESCE(ROUND(AVG(r.rating), 1), 0) FROM reviews r JOIN businesses b ON r.business_id = b.id WHERE b.city_id = $1) as avg_rating,
-        (SELECT COUNT(*) FROM businesses WHERE city_id = $1 AND status = 'approved') as approved_businesses
+    console.log('Fetching dashboard for city ID:', cityId);
+    
+    // Validate cityId
+    if (!cityId || isNaN(cityId)) {
+      return res.status(400).json({ error: 'Invalid city ID' });
+    }
+    
+    // Check if city exists
+    const cityCheck = await query('SELECT id, name FROM cities WHERE id = $1', [cityId]);
+    if (cityCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'City not found' });
+    }
+    
+    const cityName = cityCheck.rows[0].name;
+    
+    // Get total businesses in this city
+    const businessesResult = await query(`
+      SELECT COUNT(*) as count 
+      FROM businesses 
+      WHERE city_id = $1 AND status = 'approved'
     `, [cityId]);
     
-    res.json(result.rows[0]);
+    // Get pending businesses in this city
+    const pendingResult = await query(`
+      SELECT COUNT(*) as count 
+      FROM businesses 
+      WHERE city_id = $1 AND status = 'pending'
+    `, [cityId]);
+    
+    // Get total users (simple count for now)
+    const usersResult = await query('SELECT COUNT(*) as count FROM users');
+    
+    // Get total categories
+    const categoriesResult = await query('SELECT COUNT(*) as count FROM categories WHERE level = 1');
+    
+    // Get reviews for businesses in this city
+    const reviewsResult = await query(`
+      SELECT 
+        COUNT(r.id) as total_reviews,
+        COALESCE(ROUND(AVG(r.rating), 1), 0) as avg_rating
+      FROM reviews r
+      JOIN businesses b ON r.business_id = b.id
+      WHERE b.city_id = $1
+    `, [cityId]);
+    
+    const dashboardData = {
+      total_users: parseInt(usersResult.rows[0]?.count || 0),
+      total_businesses: parseInt(businessesResult.rows[0]?.count || 0),
+      pending_businesses: parseInt(pendingResult.rows[0]?.count || 0),
+      total_categories: parseInt(categoriesResult.rows[0]?.count || 0),
+      total_reviews: parseInt(reviewsResult.rows[0]?.total_reviews || 0),
+      avg_rating: parseFloat(reviewsResult.rows[0]?.avg_rating || 0),
+      city_name: cityName
+    };
+    
+    console.log('Dashboard data:', dashboardData);
+    
+    res.json(dashboardData);
   } catch (error) {
-    console.error('Dashboard by city error:', error);
+    console.error('Dashboard error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Businesses by city
+router.get('/businesses/city/:cityId', async (req, res) => {
+  try {
+    const { cityId } = req.params;
+    const result = await query(`
+      SELECT b.*, c.name as category, ct.name as city_name
+      FROM businesses b
+      LEFT JOIN categories c ON b.category_id = c.id
+      LEFT JOIN cities ct ON b.city_id = ct.id
+      WHERE b.city_id = $1
+      ORDER BY b.created_at DESC
+    `, [cityId]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reviews by city
+router.get('/reviews/city/:cityId', async (req, res) => {
+  try {
+    const { cityId } = req.params;
+    const result = await query(`
+      SELECT r.*, u.name as user_name, b.title as business_name
+      FROM reviews r
+      JOIN users u ON r.user_id = u.id
+      JOIN businesses b ON r.business_id = b.id
+      WHERE b.city_id = $1
+      ORDER BY r.created_at DESC
+    `, [cityId]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Users by city
+router.get('/users/city/:cityId', async (req, res) => {
+  try {
+    const { cityId } = req.params;
+    const result = await query(`
+      SELECT u.* FROM users u
+      JOIN businesses b ON b.submitted_by = u.id
+      WHERE b.city_id = $1
+      GROUP BY u.id
+    `, [cityId]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+// Get all cities
+
+
+// Dashboard by city
+
+
+// Reviews by city
+router.get('/reviews/city/:cityId', async (req, res) => {
+  try {
+    const { cityId } = req.params;
+    const result = await query(`
+      SELECT r.*, u.name as user_name, b.title as business_name
+      FROM reviews r
+      JOIN users u ON r.user_id = u.id
+      JOIN businesses b ON r.business_id = b.id
+      WHERE b.city_id = $1
+      ORDER BY r.created_at DESC
+    `, [cityId]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+// Get users by city
+router.get('/users/city/:cityId', async (req, res) => {
+  try {
+    const { cityId } = req.params;
+    
+    // Get city name
+    const cityResult = await query('SELECT name FROM cities WHERE id = $1', [cityId]);
+    const cityName = cityResult.rows[0]?.name || '';
+    
+    const result = await query(`
+      SELECT u.* FROM users u
+      WHERE u.city = $1 OR u.city = $2
+      ORDER BY u.created_at DESC
+    `, [cityName, cityName]);
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Users by city error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get pending businesses by city
+router.get('/pending-businesses/city/:cityId', async (req, res) => {
+  try {
+    const { cityId } = req.params;
+    const result = await query(`
+      SELECT b.*, c.name as category, u.name as submitted_by
+      FROM businesses b
+      LEFT JOIN categories c ON b.category_id = c.id
+      LEFT JOIN users u ON b.submitted_by = u.id
+      WHERE b.city_id = $1 AND b.status = 'pending'
+      ORDER BY b.submitted_at ASC
+    `, [cityId]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Pending businesses by city error:', error);
     res.status(500).json({ error: error.message });
   }
 });
