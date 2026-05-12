@@ -5,13 +5,13 @@ dotenv.config();
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false, 
-  },
-  max: 20,
-  idleTimeoutMillis: 30000,
-  // Increased from 2000 to 10000 (10 seconds) so Neon has time to wake up!
-  connectionTimeoutMillis: 10000, 
+  // ssl: {
+  //   rejectUnauthorized: false, 
+  // },
+  // max: 20,
+  // idleTimeoutMillis: 30000,
+  // // Increased from 2000 to 10000 (10 seconds) so Neon has time to wake up!
+  // connectionTimeoutMillis: 10000, 
 });
 
 // Test database connection
