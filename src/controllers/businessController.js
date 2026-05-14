@@ -12,7 +12,6 @@ const Business = require('../models/Business');
 
 
 
-// Get businesses by category (with city filter)
 const getBusinessesByCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
@@ -30,33 +29,24 @@ const getBusinessesByCategory = async (req, res) => {
     const params = [categoryId];
     let paramIndex = 2;
     
-    // Add city filter if cityId is provided
-    if (cityId && cityId !== 'null' && cityId !== 'undefined' && cityId !== '') {
-      sql += ` AND b.city_id = $${paramIndex}`;
-      params.push(parseInt(cityId));
-      console.log('Filtering by city ID:', cityId);
+    // 🟢 THE FIX: Uses ILIKE for case-insensitive Name searching!
+    if (cityId && cityId !== 'null' && cityId !== 'undefined' && cityId !== '' && cityId !== 'All') {
+      sql += ` AND ct.name ILIKE $${paramIndex}`;
+      params.push(cityId); // Removed parseInt!
+      console.log('Filtering by city Name:', cityId);
     }
     
     sql += ` ORDER BY b.rating DESC`;
     
     const result = await query(sql, params);
-    
-    console.log(`Found ${result.rows.length} businesses`);
-    
-    res.json({
-      success: true,
-      data: result.rows
-    });
+    res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get businesses error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch businesses'
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch businesses' });
   }
 };
 
-// Get businesses by main category (with city filter)
+
 const getBusinessesByMainCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
@@ -74,31 +64,25 @@ const getBusinessesByMainCategory = async (req, res) => {
     const params = [categoryId];
     let paramIndex = 2;
     
-    // Add city filter if cityId is provided
-    if (cityId && cityId !== 'null' && cityId !== 'undefined' && cityId !== '') {
-      sql += ` AND b.city_id = $${paramIndex}`;
-      params.push(parseInt(cityId));
-      console.log('Filtering by city ID:', cityId);
+    // 🟢 THE FIX: Uses ILIKE for case-insensitive Name searching!
+    if (cityId && cityId !== 'null' && cityId !== 'undefined' && cityId !== '' && cityId !== 'All') {
+      sql += ` AND ct.name ILIKE $${paramIndex}`;
+      params.push(cityId); // Removed parseInt!
+      console.log('Filtering by city Name:', cityId);
     }
     
     sql += ` ORDER BY b.rating DESC`;
     
     const result = await query(sql, params);
-    
-    console.log(`Found ${result.rows.length} businesses for main category`);
-    
-    res.json({
-      success: true,
-      data: result.rows
-    });
+    res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get businesses by main category error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch businesses'
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch businesses' });
   }
 };
+
+// Get businesses by main category (with city filter)
+
 // Get all businesses
 const getAllBusinesses = async (req, res) => {
   try {
