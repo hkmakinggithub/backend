@@ -13,7 +13,7 @@ async function updateBusinessRating(businessId) {
       WHERE business_id = $1
     ),
     total_reviews = (
-      SELECT COUNT(*) 
+      SELECT COUNT(*)   
       FROM reviews 
       WHERE business_id = $1
     )

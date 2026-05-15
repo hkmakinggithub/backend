@@ -1,6 +1,7 @@
 const app = require('./src/app');
 const dotenv = require('dotenv');
 
+
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
@@ -11,7 +12,7 @@ const server = app.listen(PORT, () => {
   console.log(`🔗 API URL: http://localhost:${PORT}`);
   console.log(`📋 Health check: http://localhost:${PORT}/health`);
 });
-
+// app.use('/api/news', newsRoutes);
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Rejection:', err);

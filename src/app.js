@@ -108,7 +108,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const cityRoutes = require('./routes/cityRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const adminAdsRoutes = require('./routes/adminAdsRoutes'); // ✅ Add this
-
+const newsRoutes = require('./routes/news');
 const app = express();
 
 // Middleware
@@ -136,6 +136,15 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/cities', cityRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin', adminAdsRoutes); // ✅ Add this line
+
+
+
+app.use('/api/news', newsRoutes); // <-- Put it right with its friends!
+app.use((req, res, next) => {
+  res.status(404).json({ success: false, message: `Route not found: ${req.method} ${req.originalUrl}` });
+});
+
+
 
 // Health check
 app.get('/health', (req, res) => {
@@ -176,5 +185,6 @@ app.use((err, req, res, next) => {
     message: 'Internal server error'
   });
 });
+
 
 module.exports = app;
