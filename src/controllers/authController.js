@@ -1,118 +1,658 @@
+// const User = require('../models/User');
+// const jwt = require('jsonwebtoken');
+
+// // Generate JWT Token
+// const generateToken = (userId) => {
+//   return jwt.sign(
+//     { id: userId },
+//     process.env.JWT_SECRET,
+//     { expiresIn: process.env.JWT_EXPIRE }
+//   );
+// };
+// // Google/Facebook login
+// const socialLogin = async (req, res) => {
+//   try {
+//     const { provider, email, name, providerId, profileImage } = req.body;
+    
+//     // Check if user exists
+//     let user = await User.findByEmail(email);
+    
+//     if (!user) {
+//       // Create new user
+//       user = await User.createSocialUser({
+//         name,
+//         email,
+//         provider,
+//         providerId,
+//         profile_image: profileImage,
+//         phone: null // Will be added later
+//       });
+//     }
+    
+//     const token = generateToken(user.id);
+    
+//     res.json({
+//       success: true,
+//       message: 'Login successful',
+//       data: { user, token }
+//     });
+//   } catch (error) {
+//     console.error('Social login error:', error);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+// // @desc    Register new user
+// const register = async (req, res) => {
+//   try {
+//     const { name, phone, city, pincode, password, profile_image } = req.body;
+    
+//     console.log('Register attempt:', { name, phone, city, pincode });
+    
+//     // Basic validation
+//     if (!name || !phone || !city || !pincode || !password) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'All fields are required'
+//       });
+//     }
+    
+//     if (phone.length < 10) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Phone number must be at least 10 digits'
+//       });
+//     }
+    
+//     if (pincode.length !== 6) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Pincode must be 6 digits'
+//       });
+//     }
+    
+//     if (password.length < 6) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Password must be at least 6 characters'
+//       });
+//     }
+    
+//     // Check if user already exists
+//     const existingUser = await User.findByPhone(phone);
+//     if (existingUser) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Phone number already registered'
+//       });
+//     }
+    
+//     // Create new user
+//     const user = await User.create({
+//       name,
+//       phone,
+//       city,
+//       pincode,
+//       password,
+//       profile_image
+//     });
+    
+//     // Generate token
+//     const token = generateToken(user.id);
+    
+//     res.status(201).json({
+//       success: true,
+//       message: 'User registered successfully',
+//       data: {
+//         user,
+//         token
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Register error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Server error: ' + error.message
+//     });
+//   }
+// };
+
+// // @desc    Login user
+// const login = async (req, res) => {
+//   try {
+//     const { phone, password } = req.body;
+    
+//     console.log('Login attempt:', { phone });
+    
+//     if (!phone || !password) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Phone and password are required'
+//       });
+//     }
+    
+//     // Find user by phone
+//     const user = await User.findByPhone(phone);
+//     if (!user) {
+//       return res.status(401).json({
+//         success: false,
+//         message: 'Invalid credentials'
+//       });
+//     }
+    
+//     // Verify password
+//     const isPasswordValid = await User.verifyPassword(password, user.password);
+//     if (!isPasswordValid) {
+//       return res.status(401).json({
+//         success: false,
+//         message: 'Invalid credentials'
+//       });
+//     }
+    
+//     // Remove password from user object
+//     const { password: _, ...userWithoutPassword } = user;
+    
+//     // Generate token
+//     const token = generateToken(user.id);
+    
+//     res.json({
+//       success: true,
+//       message: 'Login successful',
+//       data: {
+//         user: userWithoutPassword,
+//         token
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Login error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Server error: ' + error.message
+//     });
+//   }
+// };
+
+// // @desc    Get current user profile
+// const getMe = async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user.id);
+//     if (!user) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'User not found'
+//       });
+//     }
+    
+//     res.json({
+//       success: true,
+//       data: user
+//     });
+//   } catch (error) {
+//     console.error('Get profile error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Server error: ' + error.message
+//     });
+//   }
+// };
+
+// // @desc    Update user profile
+// const updateProfile = async (req, res) => {
+//   try {
+//     const { name, city, pincode, profile_image } = req.body;
+    
+//     const updatedUser = await User.update(req.user.id, {
+//       name,
+//       city,
+//       pincode,
+//       profile_image
+//     });
+    
+//     if (!updatedUser) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'User not found'
+//       });
+//     }
+    
+//     res.json({
+//       success: true,
+//       message: 'Profile updated successfully',
+//       data: updatedUser
+//     });
+//   } catch (error) {
+//     console.error('Update profile error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Server error: ' + error.message
+//     });
+//   }
+// };
+
+// // @desc    Forgot password
+// const forgotPassword = async (req, res) => {
+//   try {
+//     const { phone } = req.body;
+    
+//     if (!phone) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Phone number is required'
+//       });
+//     }
+    
+//     const user = await User.findByPhone(phone);
+//     if (!user) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'User not found with this phone number'
+//       });
+//     }
+    
+//     res.json({
+//       success: true,
+//       message: 'Password reset instructions sent to your phone'
+//     });
+//   } catch (error) {
+//     console.error('Forgot password error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Server error: ' + error.message
+//     });
+//   }
+// };
+
+// // @desc    Reset password
+// const resetPassword = async (req, res) => {
+//   try {
+//     const { phone, password } = req.body;
+    
+//     if (!phone || !password) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Phone and password are required'
+//       });
+//     }
+    
+//     if (password.length < 6) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Password must be at least 6 characters'
+//       });
+//     }
+    
+//     const user = await User.findByPhone(phone);
+//     if (!user) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'User not found'
+//       });
+//     }
+    
+//     await User.updatePassword(user.id, password);
+    
+//     res.json({
+//       success: true,
+//       message: 'Password reset successful. Please login with your new password.'
+//     });
+//   } catch (error) {
+//     console.error('Reset password error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Server error: ' + error.message
+//     });
+//   }
+// };
+
+// // @desc    Logout user
+// const logout = async (req, res) => {
+//   try {
+//     res.json({
+//       success: true,
+//       message: 'Logged out successfully'
+//     });
+//   } catch (error) {
+//     console.error('Logout error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Server error: ' + error.message
+//     });
+//   }
+// };
+
+
+
+// // Change password
+// const changePassword = async (req, res) => {
+//   try {
+//     const { oldPassword, newPassword } = req.body;
+//     const userId = req.user.id;
+    
+//     // Get user with password
+//     const user = await User.findByIdWithPassword(userId);
+    
+//     // Verify old password
+//     const isMatch = await User.verifyPassword(oldPassword, user.password);
+//     if (!isMatch) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Current password is incorrect'
+//       });
+//     }
+    
+//     // Update password
+//     await User.updatePassword(userId, newPassword);
+    
+//     res.json({
+//       success: true,
+//       message: 'Password changed successfully'
+//     });
+//   } catch (error) {
+//     console.error('Change password error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to change password'
+//     });
+//   }
+// };
+
+// // Get user's submitted businesses
+// const getMyBusinesses = async (req, res) => {
+//   try {
+//     const userId = req.user.id;
+    
+//     const sql = `
+//       SELECT * FROM businesses 
+//       WHERE submitted_by = $1 
+//       ORDER BY created_at DESC
+//     `;
+//     const result = await query(sql, [userId]);
+    
+//     res.json({
+//       success: true,
+//       data: result.rows
+//     });
+//   } catch (error) {
+//     console.error('Get my businesses error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch your businesses'
+//     });
+//   }
+// };
+
+// // Upload profile picture
+// const uploadProfilePicture = async (req, res) => {
+//   try {
+//     const userId = req.user.id;
+//     const { profile_image } = req.body;
+    
+//     await User.updateProfileImage(userId, profile_image);
+    
+//     res.json({
+//       success: true,
+//       message: 'Profile picture updated',
+//       imageUrl: profile_image
+//     });
+//   } catch (error) {
+//     console.error('Upload profile picture error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to upload profile picture'
+//     });
+//   }
+// };
+
+
+// const { createAndSendOTP, verifyOTP } = require('../services/otpService');
+
+// // Send OTP for login/registration
+// const sendLoginOTP = async (req, res) => {
+//   try {
+//     const { phoneNumber } = req.body;
+    
+//     if (!phoneNumber || phoneNumber.length < 10) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Valid phone number is required'
+//       });
+//     }
+    
+//     const result = await createAndSendOTP(phoneNumber);
+    
+//     res.json({
+//       success: true,
+//       message: 'OTP sent successfully',
+//       // In development, send OTP for testing
+//       otp: process.env.NODE_ENV === 'development' ? result.otp : undefined
+//     });
+//   } catch (error) {
+//     console.error('Send OTP error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to send OTP'
+//     });
+//   }
+// };
+
+// // Verify OTP and login/register
+// const verifyOTPAndLogin = async (req, res) => {
+//   try {
+//     const { phoneNumber, otp, name, email } = req.body;
+    
+//     // Verify OTP
+//     const verification = verifyOTP(phoneNumber, otp);
+//     if (!verification.success) {
+//       return res.status(400).json(verification);
+//     }
+    
+//     // Check if user exists
+//     let user = await User.findByPhone(phoneNumber);
+    
+//     if (!user) {
+//       // Register new user
+//       user = await User.create({
+//         name: name || `User_${phoneNumber.slice(-4)}`,
+//         phone: phoneNumber,
+//         email: email || null,
+//         city: '',
+//         pincode: '',
+//         password: Math.random().toString(36).slice(-8), // Random password
+//         isVerified: true
+//       });
+//     }
+    
+//     // Generate token
+//     const token = generateToken(user.id);
+    
+//     // Remove password from response
+//     const { password: _, ...userWithoutPassword } = user;
+    
+//     res.json({
+//       success: true,
+//       message: 'Login successful',
+//       data: {
+//         user: userWithoutPassword,
+//         token
+//       }
+//     });
+//   } catch (error) {
+//     console.error('OTP Login error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Login failed'
+//     });
+//   }
+// };
+
+// // Google Login
+// const googleLogin = async (req, res) => {
+//   try {
+//     const { googleId, email, name, picture } = req.body;
+    
+//     // Check if user exists with this email
+//     let user = await User.findByEmail(email);
+    
+//     if (!user) {
+//       // Create new user with Google data
+//       user = await User.create({
+//         name: name,
+//         phone: '',
+//         email: email,
+//         city: '',
+//         pincode: '',
+//         password: Math.random().toString(36).slice(-8),
+//         profile_image: picture,
+//         google_id: googleId,
+//         isVerified: true
+//       });
+//     }
+    
+//     const token = generateToken(user.id);
+//     const { password: _, ...userWithoutPassword } = user;
+    
+//     res.json({
+//       success: true,
+//       message: 'Google login successful',
+//       data: {
+//         user: userWithoutPassword,
+//         token
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Google login error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Google login failed'
+//     });
+//   }
+// };
+
+// // Facebook Login
+// const facebookLogin = async (req, res) => {
+//   try {
+//     const { facebookId, email, name, picture } = req.body;
+    
+//     let user = await User.findByEmail(email);
+    
+//     if (!user) {
+//       user = await User.create({
+//         name: name,
+//         phone: '',
+//         email: email,
+//         city: '',
+//         pincode: '',
+//         password: Math.random().toString(36).slice(-8),
+//         profile_image: picture,
+//         facebook_id: facebookId,
+//         isVerified: true
+//       });
+//     }
+    
+//     const token = generateToken(user.id);
+//     const { password: _, ...userWithoutPassword } = user;
+    
+//     res.json({
+//       success: true,
+//       message: 'Facebook login successful',
+//       data: {
+//         user: userWithoutPassword,
+//         token
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Facebook login error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Facebook login failed'
+//     });
+//   }
+// };
+// module.exports = {
+//   register,
+//   login,
+//   getMe,
+//   updateProfile,
+//   changePassword,
+//   getMyBusinesses,
+//   uploadProfilePicture,
+//   forgotPassword,
+//   resetPassword,
+//   logout,
+//    sendLoginOTP,        // Add this
+//   verifyOTPAndLogin,   // Add this
+//   googleLogin,         // Add this
+//   facebookLogin        // Add this
+// };
+
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { query } = require('../config/database'); 
+const { createAndSendOTP, verifyOTP } = require('../services/otpService');
 
 // Generate JWT Token
 const generateToken = (userId) => {
   return jwt.sign(
     { id: userId },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRE }
+    process.env.JWT_SECRET || 'fallback_secret_key',
+    { expiresIn: process.env.JWT_EXPIRE || '30d' }
   );
 };
-// Google/Facebook login
+
+// Google/Facebook legacy endpoint check
 const socialLogin = async (req, res) => {
   try {
-    const { provider, email, name, providerId, profileImage } = req.body;
-    
-    // Check if user exists
+    const { email, name, profileImage } = req.body;
     let user = await User.findByEmail(email);
     
     if (!user) {
-      // Create new user
-      user = await User.createSocialUser({
+      user = await User.create({
         name,
-        email,
-        provider,
-        providerId,
-        profile_image: profileImage,
-        phone: null // Will be added later
+        phone: `Social_${Date.now().toString().slice(-6)}`, 
+        city: 'Local',
+        pincode: '000000',
+        password: Math.random().toString(36).slice(-8),
+        profile_image: profileImage
       });
     }
     
     const token = generateToken(user.id);
-    
-    res.json({
-      success: true,
-      message: 'Login successful',
-      data: { user, token }
-    });
+    res.json({ success: true, message: 'Login successful', data: { user, token } });
   } catch (error) {
     console.error('Social login error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 // @desc    Register new user
 const register = async (req, res) => {
   try {
     const { name, phone, city, pincode, password, profile_image } = req.body;
     
-    console.log('Register attempt:', { name, phone, city, pincode });
-    
-    // Basic validation
     if (!name || !phone || !city || !pincode || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'All fields are required'
-      });
+      return res.status(400).json({ success: false, message: 'All fields are required' });
     }
-    
     if (phone.length < 10) {
-      return res.status(400).json({
-        success: false,
-        message: 'Phone number must be at least 10 digits'
-      });
+      return res.status(400).json({ success: false, message: 'Phone number must be at least 10 digits' });
     }
-    
     if (pincode.length !== 6) {
-      return res.status(400).json({
-        success: false,
-        message: 'Pincode must be 6 digits'
-      });
+      return res.status(400).json({ success: false, message: 'Pincode must be 6 digits' });
     }
-    
     if (password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password must be at least 6 characters'
-      });
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
     }
     
-    // Check if user already exists
     const existingUser = await User.findByPhone(phone);
     if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: 'Phone number already registered'
-      });
+      return res.status(400).json({ success: false, message: 'Phone number already registered' });
     }
     
-    // Create new user
-    const user = await User.create({
-      name,
-      phone,
-      city,
-      pincode,
-      password,
-      profile_image
-    });
-    
-    // Generate token
+    const user = await User.create({ name, phone, city, pincode, password, profile_image });
     const token = generateToken(user.id);
     
-    res.status(201).json({
-      success: true,
-      message: 'User registered successfully',
-      data: {
-        user,
-        token
-      }
-    });
+    res.status(201).json({ success: true, message: 'User registered successfully', data: { user, token } });
   } catch (error) {
     console.error('Register error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error: ' + error.message
-    });
+    res.status(500).json({ success: false, message: 'Server error: ' + error.message });
   }
 };
 
@@ -120,54 +660,38 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { phone, password } = req.body;
-    
-    console.log('Login attempt:', { phone });
-    
     if (!phone || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Phone and password are required'
-      });
+      return res.status(400).json({ success: false, message: 'Phone and password are required' });
     }
     
-    // Find user by phone
     const user = await User.findByPhone(phone);
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
     
-    // Verify password
     const isPasswordValid = await User.verifyPassword(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
     
-    // Remove password from user object
     const { password: _, ...userWithoutPassword } = user;
-    
-    // Generate token
     const token = generateToken(user.id);
     
-    res.json({
-      success: true,
-      message: 'Login successful',
-      data: {
-        user: userWithoutPassword,
-        token
+    // 🟢 THE FIX: Inject the role parameter directly into the user payload wrapper object!
+    res.json({ 
+      success: true, 
+      message: 'Login successful', 
+      data: { 
+        user: {
+          ...userWithoutPassword,
+          role: user.role // 👈 Moved inside the user object where the phone app expects it!
+        }, 
+        token 
       }
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error: ' + error.message
-    });
+    res.status(500).json({ success: false, message: 'Server error: ' + error.message });
   }
 };
 
@@ -176,22 +700,12 @@ const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
-    
-    res.json({
-      success: true,
-      data: user
-    });
+    res.json({ success: true, data: user });
   } catch (error) {
     console.error('Get profile error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error: ' + error.message
-    });
+    res.status(500).json({ success: false, message: 'Server error: ' + error.message });
   }
 };
 
@@ -199,32 +713,15 @@ const getMe = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const { name, city, pincode, profile_image } = req.body;
-    
-    const updatedUser = await User.update(req.user.id, {
-      name,
-      city,
-      pincode,
-      profile_image
-    });
+    const updatedUser = await User.update(req.user.id, { name, city, pincode, profile_image });
     
     if (!updatedUser) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
-    
-    res.json({
-      success: true,
-      message: 'Profile updated successfully',
-      data: updatedUser
-    });
+    res.json({ success: true, message: 'Profile updated successfully', data: updatedUser });
   } catch (error) {
     console.error('Update profile error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error: ' + error.message
-    });
+    res.status(500).json({ success: false, message: 'Server error: ' + error.message });
   }
 };
 
@@ -232,32 +729,18 @@ const updateProfile = async (req, res) => {
 const forgotPassword = async (req, res) => {
   try {
     const { phone } = req.body;
-    
     if (!phone) {
-      return res.status(400).json({
-        success: false,
-        message: 'Phone number is required'
-      });
+      return res.status(400).json({ success: false, message: 'Phone number is required' });
     }
     
     const user = await User.findByPhone(phone);
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found with this phone number'
-      });
+      return res.status(404).json({ success: false, message: 'User not found with this phone number' });
     }
-    
-    res.json({
-      success: true,
-      message: 'Password reset instructions sent to your phone'
-    });
+    res.json({ success: true, message: 'Password reset instructions sent to your phone' });
   } catch (error) {
     console.error('Forgot password error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error: ' + error.message
-    });
+    res.status(500).json({ success: false, message: 'Server error: ' + error.message });
   }
 };
 
@@ -265,61 +748,35 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const { phone, password } = req.body;
-    
     if (!phone || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Phone and password are required'
-      });
+      return res.status(400).json({ success: false, message: 'Phone and password are required' });
     }
-    
     if (password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password must be at least 6 characters'
-      });
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
     }
     
     const user = await User.findByPhone(phone);
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
     
     await User.updatePassword(user.id, password);
-    
-    res.json({
-      success: true,
-      message: 'Password reset successful. Please login with your new password.'
-    });
+    res.json({ success: true, message: 'Password reset successful. Please login with your new password.' });
   } catch (error) {
     console.error('Reset password error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error: ' + error.message
-    });
+    res.status(500).json({ success: false, message: 'Server error: ' + error.message });
   }
 };
 
 // @desc    Logout user
 const logout = async (req, res) => {
   try {
-    res.json({
-      success: true,
-      message: 'Logged out successfully'
-    });
+    res.json({ success: true, message: 'Logged out successfully' });
   } catch (error) {
     console.error('Logout error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error: ' + error.message
-    });
+    res.status(500).json({ success: false, message: 'Server error: ' + error.message });
   }
 };
-
-
 
 // Change password
 const changePassword = async (req, res) => {
@@ -327,31 +784,17 @@ const changePassword = async (req, res) => {
     const { oldPassword, newPassword } = req.body;
     const userId = req.user.id;
     
-    // Get user with password
     const user = await User.findByIdWithPassword(userId);
-    
-    // Verify old password
     const isMatch = await User.verifyPassword(oldPassword, user.password);
     if (!isMatch) {
-      return res.status(400).json({
-        success: false,
-        message: 'Current password is incorrect'
-      });
+      return res.status(400).json({ success: false, message: 'Current password is incorrect' });
     }
     
-    // Update password
     await User.updatePassword(userId, newPassword);
-    
-    res.json({
-      success: true,
-      message: 'Password changed successfully'
-    });
+    res.json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
     console.error('Change password error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to change password'
-    });
+    res.status(500).json({ success: false, message: 'Failed to change password' });
   }
 };
 
@@ -359,24 +802,13 @@ const changePassword = async (req, res) => {
 const getMyBusinesses = async (req, res) => {
   try {
     const userId = req.user.id;
-    
-    const sql = `
-      SELECT * FROM businesses 
-      WHERE submitted_by = $1 
-      ORDER BY created_at DESC
-    `;
+    const sql = `SELECT * FROM businesses WHERE submitted_by = $1 ORDER BY created_at DESC`;
     const result = await query(sql, [userId]);
     
-    res.json({
-      success: true,
-      data: result.rows
-    });
+    res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get my businesses error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch your businesses'
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch your businesses' });
   }
 };
 
@@ -387,187 +819,147 @@ const uploadProfilePicture = async (req, res) => {
     const { profile_image } = req.body;
     
     await User.updateProfileImage(userId, profile_image);
-    
-    res.json({
-      success: true,
-      message: 'Profile picture updated',
-      imageUrl: profile_image
-    });
+    res.json({ success: true, message: 'Profile picture updated', imageUrl: profile_image });
   } catch (error) {
     console.error('Upload profile picture error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to upload profile picture'
-    });
+    res.status(500).json({ success: false, message: 'Failed to upload profile picture' });
   }
 };
-
-
-const { createAndSendOTP, verifyOTP } = require('../services/otpService');
 
 // Send OTP for login/registration
 const sendLoginOTP = async (req, res) => {
   try {
     const { phoneNumber } = req.body;
-    
     if (!phoneNumber || phoneNumber.length < 10) {
-      return res.status(400).json({
-        success: false,
-        message: 'Valid phone number is required'
-      });
+      return res.status(400).json({ success: false, message: 'Valid phone number is required' });
     }
     
     const result = await createAndSendOTP(phoneNumber);
-    
     res.json({
       success: true,
       message: 'OTP sent successfully',
-      // In development, send OTP for testing
       otp: process.env.NODE_ENV === 'development' ? result.otp : undefined
     });
   } catch (error) {
     console.error('Send OTP error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to send OTP'
-    });
+    res.status(500).json({ success: false, message: 'Failed to send OTP' });
   }
 };
 
 // Verify OTP and login/register
 const verifyOTPAndLogin = async (req, res) => {
   try {
-    const { phoneNumber, otp, name, email } = req.body;
-    
-    // Verify OTP
+    const { phoneNumber, otp, name } = req.body;
     const verification = verifyOTP(phoneNumber, otp);
     if (!verification.success) {
       return res.status(400).json(verification);
     }
     
-    // Check if user exists
     let user = await User.findByPhone(phoneNumber);
-    
     if (!user) {
-      // Register new user
       user = await User.create({
         name: name || `User_${phoneNumber.slice(-4)}`,
         phone: phoneNumber,
-        email: email || null,
-        city: '',
-        pincode: '',
-        password: Math.random().toString(36).slice(-8), // Random password
-        isVerified: true
+        city: 'Dhrangadhra', 
+        pincode: '363310',
+        password: Math.random().toString(36).slice(-8),
+        profile_image: null
       });
     }
     
-    // Generate token
     const token = generateToken(user.id);
-    
-    // Remove password from response
     const { password: _, ...userWithoutPassword } = user;
     
-    res.json({
-      success: true,
-      message: 'Login successful',
-      data: {
-        user: userWithoutPassword,
-        token
-      }
-    });
+    res.json({ success: true, message: 'Login successful', data: { user: userWithoutPassword, token } });
   } catch (error) {
     console.error('OTP Login error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Login failed'
-    });
+    res.status(500).json({ success: false, message: 'Login failed' });
   }
 };
 
 // Google Login
 const googleLogin = async (req, res) => {
   try {
-    const { googleId, email, name, picture } = req.body;
-    
-    // Check if user exists with this email
+    const { email, name, picture } = req.body;
     let user = await User.findByEmail(email);
     
     if (!user) {
-      // Create new user with Google data
       user = await User.create({
         name: name,
-        phone: '',
-        email: email,
-        city: '',
-        pincode: '',
+        phone: `G_${Date.now().toString().slice(-6)}`,
+        city: 'Dhrangadhra',
+        pincode: '363310',
         password: Math.random().toString(36).slice(-8),
-        profile_image: picture,
-        google_id: googleId,
-        isVerified: true
+        profile_image: picture
       });
     }
     
     const token = generateToken(user.id);
     const { password: _, ...userWithoutPassword } = user;
     
-    res.json({
-      success: true,
-      message: 'Google login successful',
-      data: {
-        user: userWithoutPassword,
-        token
-      }
-    });
+    res.json({ success: true, message: 'Google login successful', data: { user: userWithoutPassword, token } });
   } catch (error) {
     console.error('Google login error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Google login failed'
-    });
+    res.status(500).json({ success: false, message: 'Google login failed' });
   }
 };
 
 // Facebook Login
 const facebookLogin = async (req, res) => {
   try {
-    const { facebookId, email, name, picture } = req.body;
-    
+    const { email, name, picture } = req.body;
     let user = await User.findByEmail(email);
     
     if (!user) {
       user = await User.create({
         name: name,
-        phone: '',
-        email: email,
-        city: '',
-        pincode: '',
+        phone: `FB_${Date.now().toString().slice(-6)}`,
+        city: 'Dhrangadhra',
+        pincode: '363310',
         password: Math.random().toString(36).slice(-8),
-        profile_image: picture,
-        facebook_id: facebookId,
-        isVerified: true
+        profile_image: picture
       });
     }
     
     const token = generateToken(user.id);
     const { password: _, ...userWithoutPassword } = user;
     
-    res.json({
-      success: true,
-      message: 'Facebook login successful',
-      data: {
-        user: userWithoutPassword,
-        token
-      }
-    });
+    res.json({ success: true, message: 'Facebook login successful', data: { user: userWithoutPassword, token } });
   } catch (error) {
     console.error('Facebook login error:', error);
+    res.status(500).json({ success: false, message: 'Facebook login failed' });
+  }
+};
+
+// 🟢 FIXED: Moved outside of the facebookLogin block so it can be exported correctly
+const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const user = await User.findById(id); 
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User account not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error('Error fetching single user profile:', error);
     res.status(500).json({
       success: false,
-      message: 'Facebook login failed'
+      message: 'Server error: ' + error.message
     });
   }
 };
+
 module.exports = {
+  socialLogin,
   register,
   login,
   getMe,
@@ -578,8 +970,9 @@ module.exports = {
   forgotPassword,
   resetPassword,
   logout,
-   sendLoginOTP,        // Add this
-  verifyOTPAndLogin,   // Add this
-  googleLogin,         // Add this
-  facebookLogin        // Add this
+  sendLoginOTP,        
+  verifyOTPAndLogin,   
+  googleLogin,         
+  facebookLogin,
+  getUserById      
 };

@@ -137,7 +137,15 @@ app.use('/api/cities', cityRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin', adminAdsRoutes); // ✅ Add this line
 
+// Inside server.js
 
+
+
+
+const exportController = require('./controllers/exportController');
+
+// Add this near your other routes
+app.get('/api/export/excel', exportController.exportDatabaseToExcel);
 
 app.use('/api/news', newsRoutes); // <-- Put it right with its friends!
 app.use((req, res, next) => {
@@ -150,6 +158,7 @@ app.use((req, res, next) => {
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
+// Inside server.js
 
 // Root endpoint
 app.get('/', (req, res) => {

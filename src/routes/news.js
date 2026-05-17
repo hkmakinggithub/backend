@@ -18,7 +18,7 @@ router.get('/active', newsController.getActiveNews);
 
 // 💻 ADMIN ROUTES
 router.get('/all', newsController.getAllNews);
-router.post('/add', newsController.addNews);
+router.post('/create', newsController.addNews);
 router.put('/edit/:id', newsController.updateNews);
 router.delete('/delete/:id', newsController.deleteNews);
 router.put('/toggle/:id', newsController.toggleActiveStatus); // ✅ USE PUT INSTEAD!
