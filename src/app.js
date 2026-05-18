@@ -107,8 +107,12 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const cityRoutes = require('./routes/cityRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const adminAdsRoutes = require('./routes/adminAdsRoutes'); // ✅ Add this
+const adminAdsRoutes = require('./routes/adminAdsRoutes'); 
 const newsRoutes = require('./routes/news');
+
+// 🟢 THE FIX: Import the export router we built earlier
+const exportRouter = require('./routes/exportrouter');
+
 const app = express();
 
 // Middleware
@@ -126,7 +130,9 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Serve static files
 app.use('/uploads', express.static('uploads'));
 
-// Routes
+// ==========================================
+// API ROUTES
+// ==========================================
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/businesses', businessRoutes);
@@ -134,31 +140,22 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/cities', cityRoutes);
+app.use('/api/news', newsRoutes); 
+
+// Admin Routes
 app.use('/api/admin', adminRoutes);
-app.use('/api/admin', adminAdsRoutes); // ✅ Add this line
+app.use('/api/admin', adminAdsRoutes); 
+// 🟢 THE FIX: Mount the Excel export routes to the admin panel
+app.use('/api/admin', exportRouter); 
 
-// Inside server.js
-
-
-
-
-const exportController = require('./controllers/exportController');
-
-// Add this near your other routes
-app.get('/api/export/excel', exportController.exportDatabaseToExcel);
-
-app.use('/api/news', newsRoutes); // <-- Put it right with its friends!
-app.use((req, res, next) => {
-  res.status(404).json({ success: false, message: `Route not found: ${req.method} ${req.originalUrl}` });
-});
-
-
+// ==========================================
+// SYSTEM ROUTES
+// ==========================================
 
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
-// Inside server.js
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -173,20 +170,25 @@ app.get('/', (req, res) => {
       reviews: '/api/reviews',
       notifications: '/api/notifications',
       cities: '/api/cities',
-      admin: '/api/admin'
+      admin: '/api/admin',
+      news: '/api/news'
     }
   });
 });
+
+// ==========================================
+// ERROR HANDLERS (Must be at the very bottom!)
+// ==========================================
 
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: `Route not found: ${req.method} ${req.url}`
+    message: `Route not found: ${req.method} ${req.originalUrl}`
   });
 });
 
-// Error handler
+// Global Error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
   res.status(500).json({
@@ -194,6 +196,5 @@ app.use((err, req, res, next) => {
     message: 'Internal server error'
   });
 });
-
 
 module.exports = app;
