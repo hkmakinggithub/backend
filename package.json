@@ -24,6 +24,7 @@
     "multer": "^2.1.1",
     "node-fetch": "^2.7.0",
     "pg": "^8.11.3",
+    "postgres": "^3.4.9",
     "react-native-i18n": "^2.0.15",
     "react-native-mmkv": "^4.3.0"
   },
