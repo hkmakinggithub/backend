@@ -12,12 +12,15 @@ const server = app.listen(PORT, () => {
   console.log(`🔗 API URL: http://localhost:${PORT}`);
   console.log(`📋 Health check: http://localhost:${PORT}/health`);
 });
-// app.use('/api/news', newsRoutes);
-// Handle unhandled promise rejections
+
+
+
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Rejection:', err);
   server.close(() => process.exit(1));
 });
+
+
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {

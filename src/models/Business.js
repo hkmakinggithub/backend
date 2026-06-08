@@ -1,5 +1,9 @@
 const { query } = require('../config/database');
 
+
+
+
+
 class Business {
   // Get businesses by category
   static async getByCategory(categoryId, cityId = null) {

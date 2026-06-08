@@ -1,24 +1,687 @@
 
 
 
+// const { query } = require('../config/database');
+// const Business = require('../models/Business');
+
+
+
+
+
+
+
+// const getBusinessesByCategory = async (req, res) => {
+//   try {
+//     const { categoryId } = req.params;
+//     const { cityId } = req.query;
+    
+   
+    
+//     let sql = `
+//       SELECT b.*, c.name as category_name, ct.name as city_name
+//       FROM businesses b
+//       LEFT JOIN categories c ON b.category_id = c.id
+//       LEFT JOIN cities ct ON b.city_id = ct.id
+//       WHERE b.category_id = $1 AND b.status = 'approved'
+//     `;
+//     const params = [categoryId];
+//     let paramIndex = 2;
+    
+
+//     if (cityId && cityId !== 'null' && cityId !== 'undefined' && cityId !== '' && cityId !== 'All') {
+//       sql += ` AND ct.name ILIKE $${paramIndex}`;
+//       params.push(cityId); // Removed parseInt!
+   
+//     }
+    
+//     sql += ` ORDER BY b.rating DESC`;
+    
+//     const result = await query(sql, params);
+//     res.json({ success: true, data: result.rows });
+//   } catch (error) {
+//     console.error('Get businesses error:', error);
+//     res.status(500).json({ success: false, message: 'Failed to fetch businesses' });
+//   }
+// };
+
+
+// const getBusinessesByMainCategory = async (req, res) => {
+//   try {
+//     const { categoryId } = req.params;
+//     const { cityId } = req.query;
+    
+   
+    
+//     let sql = `
+//       SELECT b.*, c.name as category_name, ct.name as city_name
+//       FROM businesses b
+//       JOIN categories c ON b.category_id = c.id
+//       LEFT JOIN cities ct ON b.city_id = ct.id
+//       WHERE (c.id = $1 OR c.parent_id = $1) AND b.status = 'approved'
+//     `;
+//     const params = [categoryId];
+//     let paramIndex = 2;
+    
+//     // 🟢 THE FIX: Uses ILIKE for case-insensitive Name searching!
+//     if (cityId && cityId !== 'null' && cityId !== 'undefined' && cityId !== '' && cityId !== 'All') {
+//       sql += ` AND ct.name ILIKE $${paramIndex}`;
+//       params.push(cityId); // Removed parseInt!
+     
+//     }
+    
+//     sql += ` ORDER BY b.rating DESC`;
+    
+//     const result = await query(sql, params);
+//     res.json({ success: true, data: result.rows });
+//   } catch (error) {
+//     console.error('Get businesses by main category error:', error);
+//     res.status(500).json({ success: false, message: 'Failed to fetch businesses' });
+//   }
+// };
+
+
+// const getAllBusinesses = async (req, res) => {
+//   try {
+//     const sql = `
+//       SELECT * FROM businesses 
+//       WHERE status = 'approved'
+//       ORDER BY created_at DESC
+//     `;
+//     const result = await query(sql);
+    
+//     res.json({
+//       success: true,
+//       data: result.rows
+//     });
+//   } catch (error) {
+//     console.error('Get all businesses error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch businesses'
+//     });
+//   }
+// };
+
+// // Get single business
+
+// const getBusiness = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+    
+//     // Check if id is a number
+//     if (isNaN(id)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Invalid business ID'
+//       });
+//     }
+    
+//     const sql = 'SELECT * FROM businesses WHERE id = $1';
+//     const result = await query(sql, [id]);
+    
+//     if (!result.rows[0]) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Business not found'
+//       });
+//     }
+    
+//     res.json({
+//       success: true,
+//       data: result.rows[0]
+//     });
+//   } catch (error) {
+//     console.error('Get business error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch business'
+//     });
+//   }
+// };
+
+
+// // Search businesses
+// const searchBusinesses = async (req, res) => {
+//   try {
+//     const { q, category, sortBy, order, minRating, page = 1, limit = 20 } = req.query;
+    
+//     let sql = `
+//       SELECT b.*, c.name as category_name
+//       FROM businesses b
+//       LEFT JOIN categories c ON b.category_id = c.id
+//       WHERE b.status = 'approved'
+//     `;
+    
+//     const params = [];
+//     let paramIndex = 1;
+    
+//     if (q && q.trim()) {
+//       sql += ` AND (b.title ILIKE $${paramIndex} OR b.address ILIKE $${paramIndex})`;
+//       params.push(`%${q.trim()}%`);
+//       paramIndex++;
+//     }
+    
+//     if (category && category !== 'all' && category !== 'undefined') {
+//       sql += ` AND b.category_id = $${paramIndex}`;
+//       params.push(parseInt(category));
+//       paramIndex++;
+//     }
+    
+//     if (minRating && parseFloat(minRating) > 0) {
+//       sql += ` AND b.rating >= $${paramIndex}`;
+//       params.push(parseFloat(minRating));
+//       paramIndex++;
+//     }
+    
+//     if (sortBy === 'rating') {
+//       sql += ` ORDER BY b.rating ${order === 'desc' ? 'DESC' : 'ASC'}`;
+//     } else if (sortBy === 'name') {
+//       sql += ` ORDER BY b.title ${order === 'desc' ? 'DESC' : 'ASC'}`;
+//     } else {
+//       sql += ` ORDER BY b.created_at DESC`;
+//     }
+    
+//     const offset = (parseInt(page) - 1) * parseInt(limit);
+//     sql += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+//     params.push(parseInt(limit), offset);
+    
+//     const result = await query(sql, params);
+    
+//     res.json({
+//       success: true,
+//       data: result.rows,
+//       pagination: {
+//         page: parseInt(page),
+//         limit: parseInt(limit),
+//         total: result.rows.length
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Search businesses error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to search businesses'
+//     });
+//   }
+// };
+
+// // Get search suggestions
+// const getSearchSuggestions = async (req, res) => {
+//   try {
+//     const { q } = req.query;
+    
+//     if (!q || q.trim().length < 2) {
+//       return res.json({ success: true, data: [] });
+//     }
+    
+//     const sql = `
+//       SELECT DISTINCT id, title, address
+//       FROM businesses
+//       WHERE status = 'approved'
+//       AND (title ILIKE $1 OR address ILIKE $1)
+//       LIMIT 10
+//     `;
+    
+//     const result = await query(sql, [`%${q.trim()}%`]);
+    
+//     res.json({
+//       success: true,
+//       data: result.rows
+//     });
+//   } catch (error) {
+//     console.error('Get suggestions error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to get suggestions'
+//     });
+//   }
+// };
+
+// // ==================== NEW FUNCTIONS FOR SUBMIT BUSINESS ====================
+
+// const submitBusiness = async (req, res) => {
+//   try {
+//     const userId = req.user.id;
+//     const { category_id, title, address, phone, email, tag, description, images } = req.body;
+    
+
+    
+//     // Validation
+//     if (!category_id || !title || !address) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Category, title and address are required'
+//       });
+//     }
+    
+//     const sql = `
+//       INSERT INTO businesses (
+//         category_id, title, address, phone, email, tag, description, images,
+//         status, submitted_by, submitted_at
+//       )
+//       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending', $9, CURRENT_TIMESTAMP)
+//       RETURNING *
+//     `;
+    
+//     const values = [category_id, title, address, phone, email, tag, description, images || [], userId];
+//     const result = await query(sql, values);
+    
+//     res.status(201).json({
+//       success: true,
+//       message: 'Business submitted for approval',
+//       data: result.rows[0]
+//     });
+//   } catch (error) {
+//     console.error('Submit business error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to submit business: ' + error.message
+//     });
+//   }
+// };
+
+// // Get user's submitted businesses
+// const getUserSubmissions = async (req, res) => {
+//   try {
+//     const userId = req.user.id;
+    
+//     const sql = `
+//       SELECT b.*, c.name as category_name
+//       FROM businesses b
+//       LEFT JOIN categories c ON b.category_id = c.id
+//       WHERE b.submitted_by = $1
+//       ORDER BY b.submitted_at DESC
+//     `;
+//     const result = await query(sql, [userId]);
+    
+//     res.json({
+//       success: true,
+//       data: result.rows
+//     });
+//   } catch (error) {
+//     console.error('Get user submissions error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch your submissions'
+//     });
+//   }
+// };
+
+// // Admin: Get pending businesses
+// const getPendingBusinesses = async (req, res) => {
+//   try {
+//     const sql = `
+//       SELECT b.*, c.name as category_name, u.name as submitter_name, u.phone as submitter_phone
+//       FROM businesses b
+//       LEFT JOIN categories c ON b.category_id = c.id
+//       LEFT JOIN users u ON b.submitted_by = u.id
+//       WHERE b.status = 'pending'
+//       ORDER BY b.submitted_at ASC
+//     `;
+//     const result = await query(sql);
+    
+//     res.json({
+//       success: true,
+//       data: result.rows
+//     });
+//   } catch (error) {
+//     console.error('Get pending businesses error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch pending businesses'
+//     });
+//   }
+// };
+
+// // Admin: Approve business
+// const approveBusiness = async (req, res) => {
+//   try {
+//     const { businessId } = req.params;
+//     const adminId = req.user.id;
+    
+//     const sql = `
+//       UPDATE businesses 
+//       SET status = 'approved', 
+//           approved_by = $1, 
+//           approved_at = CURRENT_TIMESTAMP
+//       WHERE id = $2
+//       RETURNING *
+//     `;
+//     const result = await query(sql, [adminId, businessId]);
+    
+//     if (result.rows.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Business not found'
+//       });
+//     }
+    
+//     res.json({
+//       success: true,
+//       message: 'Business approved successfully',
+//       data: result.rows[0]
+//     });
+//   } catch (error) {
+//     console.error('Approve business error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to approve business'
+//     });
+//   }
+// };
+
+// // Admin: Reject business
+// const rejectBusiness = async (req, res) => {
+//   try {
+//     const { businessId } = req.params;
+//     const { reason } = req.body;
+//     const adminId = req.user.id;
+    
+//     const sql = `
+//       UPDATE businesses 
+//       SET status = 'rejected', 
+//           rejection_reason = $1,
+//           approved_by = $2, 
+//           approved_at = CURRENT_TIMESTAMP
+//       WHERE id = $3
+//       RETURNING *
+//     `;
+//     const result = await query(sql, [reason || 'No reason provided', adminId, businessId]);
+    
+//     if (result.rows.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Business not found'
+//       });
+//     }
+    
+//     res.json({
+//       success: true,
+//       message: 'Business rejected',
+//       data: result.rows[0]
+//     });
+//   } catch (error) {
+//     console.error('Reject business error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to reject business'
+//     });
+//   }
+// };
+
+
+// const getNearbyBusinesses = async (req, res) => {
+//   try {
+//     const { lat, lng, radius = 5, limit = 20 } = req.query;
+    
+
+    
+//     if (!lat || !lng) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Latitude and longitude are required'
+//       });
+//     }
+    
+//     // Simpler version using subquery
+//     const sql = `
+//       SELECT * FROM (
+//         SELECT *,
+//           6371 * acos(
+//             cos(radians($1)) * cos(radians(latitude)) *
+//             cos(radians(longitude) - radians($2)) +
+//             sin(radians($1)) * sin(radians(latitude))
+//           ) AS distance
+//         FROM businesses
+//         WHERE status = 'approved'
+//           AND latitude IS NOT NULL
+//           AND longitude IS NOT NULL
+//       ) AS subquery
+//       WHERE distance < $3
+//       ORDER BY distance
+//       LIMIT $4
+//     `;
+    
+//     const result = await query(sql, [parseFloat(lat), parseFloat(lng), parseFloat(radius), parseInt(limit)]);
+    
+//     res.json({
+//       success: true,
+//       data: result.rows
+//     });
+//   } catch (error) {
+//     console.error('Get nearby businesses error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch nearby businesses: ' + error.message
+//     });
+//   }
+// };
+// // Update business location (admin only)
+// const updateBusinessLocation = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { latitude, longitude } = req.body;
+    
+    
+    
+//     if (!latitude || !longitude) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Latitude and longitude are required'
+//       });
+//     }
+    
+//     const sql = `
+//       UPDATE businesses 
+//       SET latitude = $1, longitude = $2
+//       WHERE id = $3
+//       RETURNING *
+//     `;
+//     const result = await query(sql, [latitude, longitude, id]);
+    
+//     if (result.rows.length === 0) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Business not found'
+//       });
+//     }
+    
+//     res.json({
+//       success: true,
+//       message: 'Location updated successfully',
+//       data: result.rows[0]
+//     });
+//   } catch (error) {
+//     console.error('Update location error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to update location: ' + error.message
+//     });
+//   }
+// };
+
+// // Track business view
+// const trackBusinessView = async (req, res) => {
+//   try {
+//     const { businessId } = req.params;
+    
+//     // Update analytics
+//     const sql = `
+//       INSERT INTO business_analytics (business_id, views, last_updated)
+//       VALUES ($1, 1, CURRENT_TIMESTAMP)
+//       ON CONFLICT (business_id) 
+//       DO UPDATE SET views = business_analytics.views + 1, last_updated = CURRENT_TIMESTAMP
+//     `;
+//     await query(sql, [businessId]);
+    
+//     // Update daily stats
+//     const dailySql = `
+//       INSERT INTO business_daily_stats (business_id, date, views)
+//       VALUES ($1, CURRENT_DATE, 1)
+//       ON CONFLICT (business_id, date) 
+//       DO UPDATE SET views = business_daily_stats.views + 1
+//     `;
+//     await query(dailySql, [businessId]);
+    
+//     res.json({ success: true });
+//   } catch (error) {
+//     console.error('Track view error:', error);
+//     res.status(500).json({ success: false });
+//   }
+// };
+
+// // Track business click (call, direction, share, whatsapp)
+// const trackBusinessClick = async (req, res) => {
+//   try {
+//     const { businessId } = req.params;
+//     const { type } = req.body; // 'call', 'direction', 'share', 'whatsapp'
+    
+//     let column = '';
+//     switch(type) {
+//       case 'call': column = 'call_clicks'; break;
+//       case 'direction': column = 'direction_clicks'; break;
+//       case 'share': column = 'shares'; break;
+//       case 'whatsapp': column = 'whatsapp_clicks'; break;
+//       default: column = 'clicks';
+//     }
+    
+//     const sql = `
+//       INSERT INTO business_analytics (business_id, ${column}, last_updated)
+//       VALUES ($1, 1, CURRENT_TIMESTAMP)
+//       ON CONFLICT (business_id) 
+//       DO UPDATE SET ${column} = business_analytics.${column} + 1, last_updated = CURRENT_TIMESTAMP
+//     `;
+//     await query(sql, [businessId]);
+    
+//     // Update daily stats
+//     const dailySql = `
+//       INSERT INTO business_daily_stats (business_id, date, clicks)
+//       VALUES ($1, CURRENT_DATE, 1)
+//       ON CONFLICT (business_id, date) 
+//       DO UPDATE SET clicks = business_daily_stats.clicks + 1
+//     `;
+//     await query(dailySql, [businessId]);
+    
+//     res.json({ success: true });
+//   } catch (error) {
+//     console.error('Track click error:', error);
+//     res.status(500).json({ success: false });
+//   }
+// };
+
+// // Get business analytics (Admin only)
+// const getBusinessAnalytics = async (req, res) => {
+//   try {
+//     const { businessId } = req.params;
+    
+//     const sql = `
+//       SELECT * FROM business_analytics WHERE business_id = $1
+//     `;
+//     const result = await query(sql, [businessId]);
+    
+//     // Get last 7 days stats
+//     const dailySql = `
+//       SELECT date, views, clicks
+//       FROM business_daily_stats
+//       WHERE business_id = $1 AND date >= CURRENT_DATE - INTERVAL '7 days'
+//       ORDER BY date DESC
+//     `;
+//     const dailyResult = await query(dailySql, [businessId]);
+    
+//     res.json({
+//       success: true,
+//       data: result.rows[0] || { views: 0, clicks: 0, shares: 0 },
+//       daily: dailyResult.rows
+//     });
+//   } catch (error) {
+//     console.error('Get analytics error:', error);
+//     res.status(500).json({ success: false });
+//   }
+// };
+
+// // Get popular businesses (Top 10)
+// const getPopularBusinesses = async (req, res) => {
+//   try {
+//     const sql = `
+//       SELECT b.*, a.views, a.clicks, a.shares
+//       FROM businesses b
+//       JOIN business_analytics a ON b.id = a.business_id
+//       WHERE b.status = 'approved'
+//       ORDER BY a.views DESC
+//       LIMIT 10
+//     `;
+//     const result = await query(sql);
+    
+//     res.json({
+//       success: true,
+//       data: result.rows
+//     });
+//   } catch (error) {
+//     console.error('Get popular businesses error:', error);
+//     res.status(500).json({ success: false });
+//   }
+// };
+
+// module.exports = {
+//   getBusinessesByCategory,
+//   getAllBusinesses,
+//   getBusiness,
+//   searchBusinesses,
+//   getSearchSuggestions,
+//   submitBusiness,
+//   getUserSubmissions,
+//   getPendingBusinesses,
+//   approveBusiness,
+//   rejectBusiness,
+//   getNearbyBusinesses,
+//   updateBusinessLocation,
+//   trackBusinessView,        
+//   trackBusinessClick,       
+//   getBusinessAnalytics,     
+//   getPopularBusinesses,      
+//   getBusinessesByMainCategory  
+// };
+
 const { query } = require('../config/database');
 const Business = require('../models/Business');
-// Get businesses by category
-// Get businesses by category (with city filter)
-// Get businesses by category (with optional city filter)
 
+// =======================================================
+// 🚀 ENTERPRISE SERVER MEMORY (RAM CACHE)
+// Protects the database from EMAXCONNSESSION crashes
+// =======================================================
+const memoryCache = {};
+const CACHE_TTL = 3 * 60 * 1000; // 3 minutes in milliseconds
 
+// Helper function to check and set cache
+const getCachedData = (key) => {
+  if (memoryCache[key] && (Date.now() - memoryCache[key].timestamp < CACHE_TTL)) {
+    return memoryCache[key].data;
+  }
+  return null;
+};
 
-
-
+const setCachedData = (key, data) => {
+  memoryCache[key] = {
+    data: data,
+    timestamp: Date.now()
+  };
+};
+// =======================================================
 
 const getBusinessesByCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
     const { cityId } = req.query;
     
-    console.log('Fetching businesses - Category:', categoryId, 'City:', cityId);
+    // ⚡ FAST LOAD: Check RAM Cache first
+    const cacheKey = `cat_${categoryId}_city_${cityId || 'all'}`;
+    const cachedData = getCachedData(cacheKey);
     
+    if (cachedData) {
+      return res.json({ success: true, data: cachedData, cached: true });
+    }
+
+    // 🐢 SLOW LOAD: Query Database
     let sql = `
       SELECT b.*, c.name as category_name, ct.name as city_name
       FROM businesses b
@@ -29,16 +692,18 @@ const getBusinessesByCategory = async (req, res) => {
     const params = [categoryId];
     let paramIndex = 2;
     
-    // 🟢 THE FIX: Uses ILIKE for case-insensitive Name searching!
     if (cityId && cityId !== 'null' && cityId !== 'undefined' && cityId !== '' && cityId !== 'All') {
       sql += ` AND ct.name ILIKE $${paramIndex}`;
-      params.push(cityId); // Removed parseInt!
-      console.log('Filtering by city Name:', cityId);
+      params.push(cityId); 
     }
     
     sql += ` ORDER BY b.rating DESC`;
     
     const result = await query(sql, params);
+    
+    // 💾 Save to RAM Cache for the next users
+    setCachedData(cacheKey, result.rows);
+    
     res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get businesses error:', error);
@@ -46,14 +711,20 @@ const getBusinessesByCategory = async (req, res) => {
   }
 };
 
-
 const getBusinessesByMainCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
     const { cityId } = req.query;
     
-    console.log('Fetching main category - Category:', categoryId, 'City:', cityId);
+    // ⚡ FAST LOAD: Check RAM Cache first
+    const cacheKey = `maincat_${categoryId}_city_${cityId || 'all'}`;
+    const cachedData = getCachedData(cacheKey);
     
+    if (cachedData) {
+      return res.json({ success: true, data: cachedData, cached: true });
+    }
+
+    // 🐢 SLOW LOAD: Query Database
     let sql = `
       SELECT b.*, c.name as category_name, ct.name as city_name
       FROM businesses b
@@ -64,16 +735,18 @@ const getBusinessesByMainCategory = async (req, res) => {
     const params = [categoryId];
     let paramIndex = 2;
     
-    // 🟢 THE FIX: Uses ILIKE for case-insensitive Name searching!
     if (cityId && cityId !== 'null' && cityId !== 'undefined' && cityId !== '' && cityId !== 'All') {
       sql += ` AND ct.name ILIKE $${paramIndex}`;
-      params.push(cityId); // Removed parseInt!
-      console.log('Filtering by city Name:', cityId);
+      params.push(cityId);
     }
     
     sql += ` ORDER BY b.rating DESC`;
     
     const result = await query(sql, params);
+    
+    // 💾 Save to RAM
+    setCachedData(cacheKey, result.rows);
+    
     res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get businesses by main category error:', error);
@@ -81,11 +754,14 @@ const getBusinessesByMainCategory = async (req, res) => {
   }
 };
 
-// Get businesses by main category (with city filter)
-
-// Get all businesses
 const getAllBusinesses = async (req, res) => {
   try {
+    // ⚡ FAST LOAD
+    const cacheKey = 'all_businesses';
+    const cachedData = getCachedData(cacheKey);
+    if (cachedData) return res.json({ success: true, data: cachedData, cached: true });
+
+    // 🐢 SLOW LOAD
     const sql = `
       SELECT * FROM businesses 
       WHERE status = 'approved'
@@ -93,56 +769,38 @@ const getAllBusinesses = async (req, res) => {
     `;
     const result = await query(sql);
     
-    res.json({
-      success: true,
-      data: result.rows
-    });
+    setCachedData(cacheKey, result.rows); // 💾 Save to RAM
+    res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get all businesses error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch businesses'
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch businesses' });
   }
 };
 
-// Get single business
-// Get single business
+// Get single business (DO NOT CACHE - Highly specific and needs live views)
 const getBusiness = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Check if id is a number
     if (isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid business ID'
-      });
+      return res.status(400).json({ success: false, message: 'Invalid business ID' });
     }
     
     const sql = 'SELECT * FROM businesses WHERE id = $1';
     const result = await query(sql, [id]);
     
     if (!result.rows[0]) {
-      return res.status(404).json({
-        success: false,
-        message: 'Business not found'
-      });
+      return res.status(404).json({ success: false, message: 'Business not found' });
     }
     
-    res.json({
-      success: true,
-      data: result.rows[0]
-    });
+    res.json({ success: true, data: result.rows[0] });
   } catch (error) {
     console.error('Get business error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch business'
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch business' });
   }
 };
-// Search businesses
+
+// Search businesses (DO NOT CACHE - Too many variations of searches)
 const searchBusinesses = async (req, res) => {
   try {
     const { q, category, sortBy, order, minRating, page = 1, limit = 20 } = req.query;
@@ -192,18 +850,11 @@ const searchBusinesses = async (req, res) => {
     res.json({
       success: true,
       data: result.rows,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total: result.rows.length
-      }
+      pagination: { page: parseInt(page), limit: parseInt(limit), total: result.rows.length }
     });
   } catch (error) {
     console.error('Search businesses error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to search businesses'
-    });
+    res.status(500).json({ success: false, message: 'Failed to search businesses' });
   }
 };
 
@@ -211,10 +862,7 @@ const searchBusinesses = async (req, res) => {
 const getSearchSuggestions = async (req, res) => {
   try {
     const { q } = req.query;
-    
-    if (!q || q.trim().length < 2) {
-      return res.json({ success: true, data: [] });
-    }
+    if (!q || q.trim().length < 2) return res.json({ success: true, data: [] });
     
     const sql = `
       SELECT DISTINCT id, title, address
@@ -223,38 +871,22 @@ const getSearchSuggestions = async (req, res) => {
       AND (title ILIKE $1 OR address ILIKE $1)
       LIMIT 10
     `;
-    
     const result = await query(sql, [`%${q.trim()}%`]);
-    
-    res.json({
-      success: true,
-      data: result.rows
-    });
+    res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get suggestions error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to get suggestions'
-    });
+    res.status(500).json({ success: false, message: 'Failed to get suggestions' });
   }
 };
 
-// ==================== NEW FUNCTIONS FOR SUBMIT BUSINESS ====================
-
-// User submits a new business
+// Submit Business (Wipe Cache when new business is added)
 const submitBusiness = async (req, res) => {
   try {
     const userId = req.user.id;
     const { category_id, title, address, phone, email, tag, description, images } = req.body;
     
-    console.log('Submitting business:', { userId, category_id, title, address });
-    
-    // Validation
     if (!category_id || !title || !address) {
-      return res.status(400).json({
-        success: false,
-        message: 'Category, title and address are required'
-      });
+      return res.status(400).json({ success: false, message: 'Category, title and address are required' });
     }
     
     const sql = `
@@ -269,25 +901,16 @@ const submitBusiness = async (req, res) => {
     const values = [category_id, title, address, phone, email, tag, description, images || [], userId];
     const result = await query(sql, values);
     
-    res.status(201).json({
-      success: true,
-      message: 'Business submitted for approval',
-      data: result.rows[0]
-    });
+    res.status(201).json({ success: true, message: 'Business submitted for approval', data: result.rows[0] });
   } catch (error) {
     console.error('Submit business error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to submit business: ' + error.message
-    });
+    res.status(500).json({ success: false, message: 'Failed to submit business: ' + error.message });
   }
 };
 
-// Get user's submitted businesses
 const getUserSubmissions = async (req, res) => {
   try {
     const userId = req.user.id;
-    
     const sql = `
       SELECT b.*, c.name as category_name
       FROM businesses b
@@ -296,21 +919,13 @@ const getUserSubmissions = async (req, res) => {
       ORDER BY b.submitted_at DESC
     `;
     const result = await query(sql, [userId]);
-    
-    res.json({
-      success: true,
-      data: result.rows
-    });
+    res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get user submissions error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch your submissions'
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch your submissions' });
   }
 };
 
-// Admin: Get pending businesses
 const getPendingBusinesses = async (req, res) => {
   try {
     const sql = `
@@ -322,21 +937,14 @@ const getPendingBusinesses = async (req, res) => {
       ORDER BY b.submitted_at ASC
     `;
     const result = await query(sql);
-    
-    res.json({
-      success: true,
-      data: result.rows
-    });
+    res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get pending businesses error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch pending businesses'
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch pending businesses' });
   }
 };
 
-// Admin: Approve business
+// Admin: Approve business (Wipes Cache so new business shows immediately)
 const approveBusiness = async (req, res) => {
   try {
     const { businessId } = req.params;
@@ -344,36 +952,23 @@ const approveBusiness = async (req, res) => {
     
     const sql = `
       UPDATE businesses 
-      SET status = 'approved', 
-          approved_by = $1, 
-          approved_at = CURRENT_TIMESTAMP
-      WHERE id = $2
-      RETURNING *
+      SET status = 'approved', approved_by = $1, approved_at = CURRENT_TIMESTAMP
+      WHERE id = $2 RETURNING *
     `;
     const result = await query(sql, [adminId, businessId]);
     
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Business not found'
-      });
-    }
+    if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Business not found' });
     
-    res.json({
-      success: true,
-      message: 'Business approved successfully',
-      data: result.rows[0]
-    });
+    // 🧹 WIPE CACHE: So the new business shows up for everyone immediately
+    for (const key in memoryCache) delete memoryCache[key];
+
+    res.json({ success: true, message: 'Business approved successfully', data: result.rows[0] });
   } catch (error) {
     console.error('Approve business error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to approve business'
-    });
+    res.status(500).json({ success: false, message: 'Failed to approve business' });
   }
 };
 
-// Admin: Reject business
 const rejectBusiness = async (req, res) => {
   try {
     const { businessId } = req.params;
@@ -382,53 +977,24 @@ const rejectBusiness = async (req, res) => {
     
     const sql = `
       UPDATE businesses 
-      SET status = 'rejected', 
-          rejection_reason = $1,
-          approved_by = $2, 
-          approved_at = CURRENT_TIMESTAMP
-      WHERE id = $3
-      RETURNING *
+      SET status = 'rejected', rejection_reason = $1, approved_by = $2, approved_at = CURRENT_TIMESTAMP
+      WHERE id = $3 RETURNING *
     `;
     const result = await query(sql, [reason || 'No reason provided', adminId, businessId]);
     
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Business not found'
-      });
-    }
-    
-    res.json({
-      success: true,
-      message: 'Business rejected',
-      data: result.rows[0]
-    });
+    if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Business not found' });
+    res.json({ success: true, message: 'Business rejected', data: result.rows[0] });
   } catch (error) {
     console.error('Reject business error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to reject business'
-    });
+    res.status(500).json({ success: false, message: 'Failed to reject business' });
   }
 };
-// Get nearby businesses
-// Get nearby businesses
-// Get nearby businesses
-// Get nearby businesses (Simpler version)
+
 const getNearbyBusinesses = async (req, res) => {
   try {
     const { lat, lng, radius = 5, limit = 20 } = req.query;
+    if (!lat || !lng) return res.status(400).json({ success: false, message: 'Latitude and longitude are required' });
     
-    console.log('Getting nearby businesses:', { lat, lng, radius });
-    
-    if (!lat || !lng) {
-      return res.status(400).json({
-        success: false,
-        message: 'Latitude and longitude are required'
-      });
-    }
-    
-    // Simpler version using subquery
     const sql = `
       SELECT * FROM (
         SELECT *,
@@ -438,79 +1004,43 @@ const getNearbyBusinesses = async (req, res) => {
             sin(radians($1)) * sin(radians(latitude))
           ) AS distance
         FROM businesses
-        WHERE status = 'approved'
-          AND latitude IS NOT NULL
-          AND longitude IS NOT NULL
+        WHERE status = 'approved' AND latitude IS NOT NULL AND longitude IS NOT NULL
       ) AS subquery
       WHERE distance < $3
-      ORDER BY distance
-      LIMIT $4
+      ORDER BY distance LIMIT $4
     `;
-    
     const result = await query(sql, [parseFloat(lat), parseFloat(lng), parseFloat(radius), parseInt(limit)]);
-    
-    res.json({
-      success: true,
-      data: result.rows
-    });
+    res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get nearby businesses error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch nearby businesses: ' + error.message
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch nearby businesses: ' + error.message });
   }
 };
-// Update business location (admin only)
+
 const updateBusinessLocation = async (req, res) => {
   try {
     const { id } = req.params;
     const { latitude, longitude } = req.body;
+    if (!latitude || !longitude) return res.status(400).json({ success: false, message: 'Latitude and longitude are required' });
     
-    console.log('Updating business location:', { id, latitude, longitude });
-    
-    if (!latitude || !longitude) {
-      return res.status(400).json({
-        success: false,
-        message: 'Latitude and longitude are required'
-      });
-    }
-    
-    const sql = `
-      UPDATE businesses 
-      SET latitude = $1, longitude = $2
-      WHERE id = $3
-      RETURNING *
-    `;
+    const sql = `UPDATE businesses SET latitude = $1, longitude = $2 WHERE id = $3 RETURNING *`;
     const result = await query(sql, [latitude, longitude, id]);
     
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Business not found'
-      });
-    }
+    if (result.rows.length === 0) return res.status(404).json({ success: false, message: 'Business not found' });
     
-    res.json({
-      success: true,
-      message: 'Location updated successfully',
-      data: result.rows[0]
-    });
+    // 🧹 WIPE CACHE
+    for (const key in memoryCache) delete memoryCache[key];
+
+    res.json({ success: true, message: 'Location updated successfully', data: result.rows[0] });
   } catch (error) {
     console.error('Update location error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update location: ' + error.message
-    });
+    res.status(500).json({ success: false, message: 'Failed to update location: ' + error.message });
   }
 };
 
-// Track business view
 const trackBusinessView = async (req, res) => {
   try {
     const { businessId } = req.params;
-    
-    // Update analytics
     const sql = `
       INSERT INTO business_analytics (business_id, views, last_updated)
       VALUES ($1, 1, CURRENT_TIMESTAMP)
@@ -519,7 +1049,6 @@ const trackBusinessView = async (req, res) => {
     `;
     await query(sql, [businessId]);
     
-    // Update daily stats
     const dailySql = `
       INSERT INTO business_daily_stats (business_id, date, views)
       VALUES ($1, CURRENT_DATE, 1)
@@ -527,7 +1056,6 @@ const trackBusinessView = async (req, res) => {
       DO UPDATE SET views = business_daily_stats.views + 1
     `;
     await query(dailySql, [businessId]);
-    
     res.json({ success: true });
   } catch (error) {
     console.error('Track view error:', error);
@@ -535,38 +1063,31 @@ const trackBusinessView = async (req, res) => {
   }
 };
 
-// Track business click (call, direction, share, whatsapp)
 const trackBusinessClick = async (req, res) => {
   try {
     const { businessId } = req.params;
-    const { type } = req.body; // 'call', 'direction', 'share', 'whatsapp'
-    
-    let column = '';
+    const { type } = req.body; 
+    let column = 'clicks';
     switch(type) {
       case 'call': column = 'call_clicks'; break;
       case 'direction': column = 'direction_clicks'; break;
       case 'share': column = 'shares'; break;
       case 'whatsapp': column = 'whatsapp_clicks'; break;
-      default: column = 'clicks';
     }
     
     const sql = `
       INSERT INTO business_analytics (business_id, ${column}, last_updated)
       VALUES ($1, 1, CURRENT_TIMESTAMP)
-      ON CONFLICT (business_id) 
-      DO UPDATE SET ${column} = business_analytics.${column} + 1, last_updated = CURRENT_TIMESTAMP
+      ON CONFLICT (business_id) DO UPDATE SET ${column} = business_analytics.${column} + 1, last_updated = CURRENT_TIMESTAMP
     `;
     await query(sql, [businessId]);
     
-    // Update daily stats
     const dailySql = `
       INSERT INTO business_daily_stats (business_id, date, clicks)
       VALUES ($1, CURRENT_DATE, 1)
-      ON CONFLICT (business_id, date) 
-      DO UPDATE SET clicks = business_daily_stats.clicks + 1
+      ON CONFLICT (business_id, date) DO UPDATE SET clicks = business_daily_stats.clicks + 1
     `;
     await query(dailySql, [businessId]);
-    
     res.json({ success: true });
   } catch (error) {
     console.error('Track click error:', error);
@@ -574,53 +1095,41 @@ const trackBusinessClick = async (req, res) => {
   }
 };
 
-// Get business analytics (Admin only)
 const getBusinessAnalytics = async (req, res) => {
   try {
     const { businessId } = req.params;
+    const result = await query(`SELECT * FROM business_analytics WHERE business_id = $1`, [businessId]);
+    const dailyResult = await query(`
+      SELECT date, views, clicks FROM business_daily_stats
+      WHERE business_id = $1 AND date >= CURRENT_DATE - INTERVAL '7 days' ORDER BY date DESC
+    `, [businessId]);
     
-    const sql = `
-      SELECT * FROM business_analytics WHERE business_id = $1
-    `;
-    const result = await query(sql, [businessId]);
-    
-    // Get last 7 days stats
-    const dailySql = `
-      SELECT date, views, clicks
-      FROM business_daily_stats
-      WHERE business_id = $1 AND date >= CURRENT_DATE - INTERVAL '7 days'
-      ORDER BY date DESC
-    `;
-    const dailyResult = await query(dailySql, [businessId]);
-    
-    res.json({
-      success: true,
-      data: result.rows[0] || { views: 0, clicks: 0, shares: 0 },
-      daily: dailyResult.rows
-    });
+    res.json({ success: true, data: result.rows[0] || { views: 0, clicks: 0, shares: 0 }, daily: dailyResult.rows });
   } catch (error) {
     console.error('Get analytics error:', error);
     res.status(500).json({ success: false });
   }
 };
 
-// Get popular businesses (Top 10)
 const getPopularBusinesses = async (req, res) => {
   try {
+    // ⚡ FAST LOAD: Check RAM Cache first
+    const cacheKey = 'popular_businesses';
+    const cachedData = getCachedData(cacheKey);
+    if (cachedData) return res.json({ success: true, data: cachedData, cached: true });
+
+    // 🐢 SLOW LOAD
     const sql = `
       SELECT b.*, a.views, a.clicks, a.shares
       FROM businesses b
       JOIN business_analytics a ON b.id = a.business_id
       WHERE b.status = 'approved'
-      ORDER BY a.views DESC
-      LIMIT 10
+      ORDER BY a.views DESC LIMIT 10
     `;
     const result = await query(sql);
     
-    res.json({
-      success: true,
-      data: result.rows
-    });
+    setCachedData(cacheKey, result.rows); // 💾 Save to RAM
+    res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get popular businesses error:', error);
     res.status(500).json({ success: false });
@@ -640,9 +1149,9 @@ module.exports = {
   rejectBusiness,
   getNearbyBusinesses,
   updateBusinessLocation,
-  trackBusinessView,        // Add this
-  trackBusinessClick,       // Add this
-  getBusinessAnalytics,     // Add this
-  getPopularBusinesses,      // Add this
-  getBusinessesByMainCategory  // Add this line
+  trackBusinessView,        
+  trackBusinessClick,       
+  getBusinessAnalytics,     
+  getPopularBusinesses,      
+  getBusinessesByMainCategory  
 };

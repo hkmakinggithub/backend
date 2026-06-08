@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { query } = require('../config/database');
 
-// Get all cities
+
 router.get('/', async (req, res) => {
   try {
     const result = await query('SELECT * FROM cities WHERE is_active = true ORDER BY name');
@@ -12,6 +12,7 @@ router.get('/', async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to fetch cities' });
   }
 });
+
 
 // Get businesses by city
 router.get('/:cityId/businesses', async (req, res) => {

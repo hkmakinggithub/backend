@@ -1,10 +1,12 @@
 const express = require('express');
-const router = express.Router();
-const newsController = require('../controllers/newsController');
+
+const router = express.Router()
+
+const newsController = require('../controllers/newsController')
 
 // Debug middleware to log all requests to news routes
 router.use((req, res, next) => {
-  console.log(`📰 News Route Hit: ${req.method} ${req.originalUrl}`);
+  
   next();
 });
 
@@ -16,7 +18,7 @@ router.get('/test', (req, res) => {
 // 📱 PUBLIC ROUTE
 router.get('/active', newsController.getActiveNews);
 
-// 💻 ADMIN ROUTES
+
 router.get('/all', newsController.getAllNews);
 router.post('/create', newsController.addNews);
 router.put('/edit/:id', newsController.updateNews);

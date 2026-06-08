@@ -1,5 +1,6 @@
 const { query } = require('../config/database');
 
+
 // Get reviews for a business
 const getBusinessReviews = async (req, res) => {
   try {
@@ -49,7 +50,7 @@ const addReview = async (req, res) => {
     const { rating, comment, images } = req.body;
     const userId = req.user.id;
     
-    console.log('Adding review:', { businessId, userId, rating, comment });
+  
     
     // Check if user has already reviewed
     const checkSql = 'SELECT id FROM reviews WHERE business_id = $1 AND user_id = $2';

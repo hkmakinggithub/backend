@@ -1,9 +1,13 @@
 const express = require('express');
+
 const router = express.Router();
+
 const businessController = require('../controllers/businessController');
+
 const { protect } = require('../middleware/authMiddleware');
 
-// ============= SPECIFIC ROUTES FIRST =============
+
+
 
 // Search routes
 router.get('/search', businessController.searchBusinesses);

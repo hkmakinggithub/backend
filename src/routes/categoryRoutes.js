@@ -1,8 +1,10 @@
 const express = require('express');
-const router = express.Router();
-const { query } = require('../config/database'); // ✅ Add this line
 
-// Get all main categories (level 1)
+const router = express.Router();
+
+const { query } = require('../config/database'); 
+
+
 router.get('/', async (req, res) => {
   try {
     const result = await query('SELECT * FROM categories WHERE level = 1 AND is_active = true ORDER BY name');
@@ -13,24 +15,26 @@ router.get('/', async (req, res) => {
   }
 }); 
 
+
 // Get sub-categories by parent ID
 router.get('/:parentId/subcategories', async (req, res) => {
   try {
     const { parentId } = req.params;
-    console.log('Fetching subcategories for parent ID:', parentId);
+   
     
     const result = await query(
       'SELECT * FROM categories WHERE parent_id = $1 AND is_active = true ORDER BY name',
       [parentId]
     );
     
-    console.log('Found subcategories:', result.rows.length);
+   
     res.json({ success: true, data: result.rows });
   } catch (error) {
     console.error('Get subcategories error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch subcategories' });
   }
 });
+
 
 // Get category by ID
 router.get('/:id', async (req, res) => {
@@ -43,5 +47,6 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to fetch category' });
   }
 });
+
 
 module.exports = router;

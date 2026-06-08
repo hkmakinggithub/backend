@@ -1,7 +1,6 @@
-// Simple OTP service - You can replace with actual SMS service like Twilio, Firebase, etc.
 const crypto = require('crypto');
 
-// Store OTPs temporarily (in production use Redis or database)
+
 const otpStore = new Map();
 
 // Generate random OTP
@@ -11,14 +10,8 @@ const generateOTP = () => {
 
 // Send OTP via SMS (mock - replace with actual SMS service)
 const sendOTP = async (phoneNumber, otp) => {
-  console.log(`Sending OTP ${otp} to ${phoneNumber}`);
+ 
   
-  // In production, integrate with:
-  // - Twilio: https://www.twilio.com/docs/sms
-  // - Firebase Phone Auth: https://firebase.google.com/docs/auth/android/phone-auth
-  // - Msg91: https://docs.msg91.com/
-  
-  // Mock successful send
   return { success: true, message: 'OTP sent successfully' };
 };
 

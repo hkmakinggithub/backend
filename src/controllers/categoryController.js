@@ -1,5 +1,6 @@
 const Category = require('../models/Category');
 
+
 // Get all categories (Public)
 const getCategories = async (req, res) => {
   try {

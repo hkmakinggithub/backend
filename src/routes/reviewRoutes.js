@@ -1,9 +1,13 @@
 const express = require('express');
+
 const router = express.Router();
+
 const { query } = require('../config/database');
+
 const { protect } = require('../middleware/authMiddleware');
 
-// Helper function to update business rating
+
+
 async function updateBusinessRating(businessId) {
   const sql = `
     UPDATE businesses 
@@ -45,6 +49,7 @@ router.get('/business/:businessId', async (req, res) => {
   }
 });
 
+
 // Add a review (Protected)
 router.post('/business/:businessId', protect, async (req, res) => {
   try {
@@ -52,7 +57,7 @@ router.post('/business/:businessId', protect, async (req, res) => {
     const { rating, comment } = req.body;
     const userId = req.user.id;
     
-    console.log('Adding review:', { businessId, userId, rating, comment });
+  
     
     // Insert review
     const sql = `
@@ -76,6 +81,8 @@ router.post('/business/:businessId', protect, async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+
 
 // Update a review (Protected)
 router.put('/:reviewId', protect, async (req, res) => {
@@ -117,6 +124,9 @@ router.put('/:reviewId', protect, async (req, res) => {
   }
 });
 
+
+
+
 // Delete a review (Protected)
 router.delete('/:reviewId', protect, async (req, res) => {
   try {
@@ -150,6 +160,9 @@ router.delete('/:reviewId', protect, async (req, res) => {
   }
 });
 
+
+
+
 // Get user's review for a business (Protected)
 router.get('/business/:businessId/user', protect, async (req, res) => {
   try {
@@ -168,5 +181,7 @@ router.get('/business/:businessId/user', protect, async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+
 
 module.exports = router;

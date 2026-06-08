@@ -1,6 +1,7 @@
 const Notification = require('../models/Notification');
 const { sendExpoPushNotification } = require('../utils/notifications');
 
+
 // Register push token
 const registerPushToken = async (req, res) => {
   try {

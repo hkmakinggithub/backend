@@ -1,9 +1,8 @@
 const excelJS = require('exceljs');
 const { query } = require('../config/database'); 
 
-// ==========================================
-// 1. SINGLE EXPORT: BUSINESSES ONLY
-// ==========================================
+
+
 const exportBusinessesToExcel = async (req, res) => {
   try {
     const sql = 'SELECT id, title, category, address, phone, status FROM businesses ORDER BY id DESC';
@@ -43,9 +42,7 @@ const exportBusinessesToExcel = async (req, res) => {
 };
 
 
-// ==========================================
-// 2. MASTER EXPORT: FULL DATABASE (YOUR QUERIES)
-// ==========================================
+
 const exportFullDatabaseToExcel = async (req, res) => {
   try {
     const workbook = new excelJS.Workbook();
@@ -86,9 +83,7 @@ const exportFullDatabaseToExcel = async (req, res) => {
       }
     };
 
-    // ==========================================
-    // RUNNING YOUR EXACT SQL QUERIES
-    // ==========================================
+   
 
     // 1. Table Counts
     await addSheet('Row Counts', `

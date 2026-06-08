@@ -5,26 +5,24 @@ dotenv.config();
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  // ssl: {
-  //   rejectUnauthorized: false, 
-  // },
-  // max: 20,
-  // idleTimeoutMillis: 30000,
-  // // Increased from 2000 to 10000 (10 seconds) so Neon has time to wake up!
-  // connectionTimeoutMillis: 10000, 
+  ssl: { rejectUnauthorized: false },
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
 });
 
-// Test database connection
+// Test connection
 pool.connect((err, client, release) => {
   if (err) {
-    console.error('❌ Error connecting to Neon PostgreSQL database:', err.message);
+    console.log('DATABASE_URL:', process.env.DATABASE_URL);
+    console.error('❌ Database connection error:', err.message);
   } else {
-    console.log('✅ Connected to Neon PostgreSQL cloud database!');
+    console.log('✅ Connected to PostgreSQL Database!');
     release();
   }
 });
 
 module.exports = {
   query: (text, params) => pool.query(text, params),
-  pool
+  pool,
 };

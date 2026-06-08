@@ -35,7 +35,7 @@ static async getById(id) {
     return result.rows[0];
   }
 
-// Add this to your existing Business class
+
 
 // User submits a new business
 static async submitBusiness(userId, businessData) {
