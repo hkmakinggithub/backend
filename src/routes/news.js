@@ -1,29 +1,31 @@
 const express = require('express');
+const router = express.Router();
 
-const router = express.Router()
+const newsController = require('../controllers/newsController');
+// 🟢 ADDED: Security middleware to protect admin routes
+const { protect, adminOnly } = require('../middleware/authMiddleware');
 
-const newsController = require('../controllers/newsController')
-
-// Debug middleware to log all requests to news routes
-router.use((req, res, next) => {
-  
-  next();
-});
+// ==========================================
+// 🔓 PUBLIC ROUTES (Mobile App)
+// ==========================================
 
 // Test route
 router.get('/test', (req, res) => {
-  res.json({ message: 'News routes working!' });
+  res.json({ success: true, message: 'News routes working!' });
 });
 
-// 📱 PUBLIC ROUTE
 router.get('/active', newsController.getActiveNews);
 
+// ==========================================
+// 🔒 ADMIN ROUTES (Admin Panel)
+// ==========================================
 
-router.get('/all', newsController.getAllNews);
-router.post('/create', newsController.addNews);
-router.put('/edit/:id', newsController.updateNews);
-router.delete('/delete/:id', newsController.deleteNews);
-router.put('/toggle/:id', newsController.toggleActiveStatus); // ✅ USE PUT INSTEAD!
+router.get('/all', protect, adminOnly, newsController.getAllNews);
+router.post('/create', protect, adminOnly, newsController.addNews);
+router.put('/edit/:id', protect, adminOnly, newsController.updateNews);
+router.delete('/delete/:id', protect, adminOnly, newsController.deleteNews);
+router.put('/toggle/:id', protect, adminOnly, newsController.toggleActiveStatus);
+
 // 404 handler for news routes
 router.use((req, res) => {
   res.status(404).json({ 

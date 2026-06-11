@@ -1,62 +1,205 @@
+// const Category = require('../models/Category');
+
+
+// // Get all categories (Public)
+// const getCategories = async (req, res) => {
+//   try {
+//     const categories = await Category.getAll();
+//     res.json({
+//       success: true,
+//       data: categories
+//     });
+//   } catch (error) {
+//     console.error('Get categories error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch categories'
+//     });
+//   }
+// };
+
+// // Get single category (Public)
+// const getCategory = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const category = await Category.getById(id);
+    
+//     if (!category) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Category not found'
+//       });
+//     }
+    
+//     res.json({
+//       success: true,
+//       data: category
+//     });
+//   } catch (error) {
+//     console.error('Get category error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch category'
+//     });
+//   }
+// };
+
+// // Create category (Admin only)
+// const createCategory = async (req, res) => {
+//   try {
+//     const { name, icon, description } = req.body;
+    
+//     if (!name) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Category name is required'
+//       });
+//     }
+    
+//     const category = await Category.create(name, icon, description);
+    
+//     res.status(201).json({
+//       success: true,
+//       message: 'Category created successfully',
+//       data: category
+//     });
+//   } catch (error) {
+//     console.error('Create category error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to create category'
+//     });
+//   }
+// };
+
+// // Update category (Admin only)
+// const updateCategory = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { name, icon, description } = req.body;
+    
+//     const category = await Category.update(id, name, icon, description);
+    
+//     if (!category) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Category not found'
+//       });
+//     }
+    
+//     res.json({
+//       success: true,
+//       message: 'Category updated successfully',
+//       data: category
+//     });
+//   } catch (error) {
+//     console.error('Update category error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to update category'
+//     });
+//   }
+// };
+
+// // Delete category (Admin only)
+// const deleteCategory = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const category = await Category.delete(id);
+    
+//     if (!category) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Category not found'
+//       });
+//     }
+    
+//     res.json({
+//       success: true,
+//       message: 'Category deleted successfully'
+//     });
+//   } catch (error) {
+//     console.error('Delete category error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to delete category'
+//     });
+//   }
+// };
+
+// module.exports = {
+//   getCategories,
+//   getCategory,
+//   createCategory,
+//   updateCategory,
+//   deleteCategory
+// };
+
+
 const Category = require('../models/Category');
 
-
-// Get all categories (Public)
+// Get all flat categories (Public)
 const getCategories = async (req, res) => {
   try {
     const categories = await Category.getAll();
-    res.json({
-      success: true,
-      data: categories
-    });
+    res.json({ success: true, data: categories });
   } catch (error) {
     console.error('Get categories error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch categories'
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch categories' });
   }
 };
 
-// Get single category (Public)
+// Get ONLY top-level main categories (Public)
+const getMainCategories = async (req, res) => {
+  try {
+    const categories = await Category.getMainCategories();
+    res.json({ success: true, data: categories });
+  } catch (error) {
+    console.error('Get main categories error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch main categories' });
+  }
+};
+
+// Get sub-categories for a specific parent (Public)
+const getSubCategories = async (req, res) => {
+  try {
+    const { parentId } = req.params;
+    const subCategories = await Category.getSubCategories(parentId);
+    res.json({ success: true, data: subCategories });
+  } catch (error) {
+    console.error('Get subcategories error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch subcategories' });
+  }
+};
+
+// Get single category by ID (Public)
 const getCategory = async (req, res) => {
   try {
     const { id } = req.params;
     const category = await Category.getById(id);
     
     if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: 'Category not found'
-      });
+      return res.status(404).json({ success: false, message: 'Category not found' });
     }
     
-    res.json({
-      success: true,
-      data: category
-    });
+    res.json({ success: true, data: category });
   } catch (error) {
     console.error('Get category error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch category'
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch category' });
   }
 };
 
 // Create category (Admin only)
 const createCategory = async (req, res) => {
   try {
-    const { name, icon, description } = req.body;
+    const { name, icon, description, parent_id } = req.body;
     
     if (!name) {
-      return res.status(400).json({
-        success: false,
-        message: 'Category name is required'
-      });
+      return res.status(400).json({ success: false, message: 'Category name is required' });
     }
     
-    const category = await Category.create(name, icon, description);
+    // 🟢 UPDATED: Passes payload as a clean object to match the new Model setup
+    const category = await Category.create({ name, icon, description, parent_id });
     
     res.status(201).json({
       success: true,
@@ -65,10 +208,7 @@ const createCategory = async (req, res) => {
     });
   } catch (error) {
     console.error('Create category error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create category'
-    });
+    res.status(500).json({ success: false, message: 'Failed to create category' });
   }
 };
 
@@ -76,15 +216,13 @@ const createCategory = async (req, res) => {
 const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, icon, description } = req.body;
+    const { name, icon, description, parent_id, is_active } = req.body;
     
-    const category = await Category.update(id, name, icon, description);
+    // 🟢 UPDATED: Passes update parameters inside a clean update payload object
+    const category = await Category.update(id, { name, icon, description, parent_id, is_active });
     
     if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: 'Category not found'
-      });
+      return res.status(404).json({ success: false, message: 'Category not found' });
     }
     
     res.json({
@@ -94,41 +232,32 @@ const updateCategory = async (req, res) => {
     });
   } catch (error) {
     console.error('Update category error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update category'
-    });
+    res.status(500).json({ success: false, message: 'Failed to update category' });
   }
 };
 
-// Delete category (Admin only)
+// Delete category / Toggle status (Admin only)
 const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const category = await Category.delete(id);
     
-    if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: 'Category not found'
-      });
+    // 🟢 THIS PERMANENTLY DELETES IT FROM POSTGRESQL
+    const result = await Category.delete(id); 
+    
+    if (!result) {
+      return res.status(404).json({ success: false, message: 'Category not found' });
     }
     
-    res.json({
-      success: true,
-      message: 'Category deleted successfully'
-    });
+    res.json({ success: true, message: 'Category permanently deleted' });
   } catch (error) {
-    console.error('Delete category error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to delete category'
-    });
+    console.error('Delete error:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete' });
   }
 };
-
 module.exports = {
   getCategories,
+  getMainCategories,
+  getSubCategories,
   getCategory,
   createCategory,
   updateCategory,
