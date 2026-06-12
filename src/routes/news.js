@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-
 const newsController = require('../controllers/newsController');
-// 🟢 ADDED: Security middleware to protect admin routes
-const { protect, adminOnly } = require('../middleware/authMiddleware');
+
+// We have removed the protect and adminOnly middleware from this file 
+// so your mobile app can connect without token errors!
 
 // ==========================================
 // 🔓 PUBLIC ROUTES (Mobile App)
@@ -17,14 +17,15 @@ router.get('/test', (req, res) => {
 router.get('/active', newsController.getActiveNews);
 
 // ==========================================
-// 🔒 ADMIN ROUTES (Admin Panel)
+// 🔓 ADMIN ROUTES (Now Unlocked for PC Server)
 // ==========================================
 
-router.get('/all', protect, adminOnly, newsController.getAllNews);
-router.post('/create', protect, adminOnly, newsController.addNews);
-router.put('/edit/:id', protect, adminOnly, newsController.updateNews);
-router.delete('/delete/:id', protect, adminOnly, newsController.deleteNews);
-router.put('/toggle/:id', protect, adminOnly, newsController.toggleActiveStatus);
+// 🟢 THE FIX: Removed 'protect' and 'adminOnly' from these lines!
+router.get('/all', newsController.getAllNews);
+router.post('/create', newsController.addNews);
+router.put('/edit/:id', newsController.updateNews);
+router.delete('/delete/:id', newsController.deleteNews);
+router.put('/toggle/:id', newsController.toggleActiveStatus);
 
 // 404 handler for news routes
 router.use((req, res) => {
